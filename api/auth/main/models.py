@@ -5,7 +5,7 @@ from .utils import hex_generator
 
 def uid_generator():
     uid = hex_generator()
-    while User.objects.filter(uid=uid).exist():
+    while User.objects.filter(uid=uid).exists():
         uid = hex_generator()
     return uid
 
