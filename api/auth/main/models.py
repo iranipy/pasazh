@@ -48,6 +48,8 @@ class User(AbstractTimeModel):
     city = models.ForeignKey(City, null=True, on_delete=models.SET_NULL)
     address = models.TextField(max_length=200)
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
 
 
 class OTP(AbstractTimeModel):
