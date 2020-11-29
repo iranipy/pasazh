@@ -56,3 +56,7 @@ class OTP(AbstractTimeModel):
     code = models.CharField(max_length=128)
     expire = models.IntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class BlackList(AbstractTimeModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    banned = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ban_user')
