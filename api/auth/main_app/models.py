@@ -12,8 +12,13 @@ def uid_generator():
 
 
 class AbstractTimeModel(models.Model):
-    created = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
     modified = models.DateTimeField(default=timezone.now)
+    # created_by = models.ForeignKey(User, on_delete=models.SET_NULL)
+    # modified_by = models.ForeignKey(User, on_delete=models.SET_NULL)
+    is_active = models.BooleanField(default=True)
+    
+
 
     class Meta:
         abstract = True
@@ -48,8 +53,8 @@ class User(AbstractTimeModel):
     city = models.ForeignKey(City, null=True, on_delete=models.SET_NULL)
     address = models.TextField(max_length=200)
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])
-    is_active = models.BooleanField(default=True)
     is_deleted = models.BooleanField(default=False)
+    
 
 
 class OTP(AbstractTimeModel):
@@ -59,4 +64,9 @@ class OTP(AbstractTimeModel):
 
 class BlackList(AbstractTimeModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    banned = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ban_user')
+    banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
+
+
+class Following(AbstractTimeModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
