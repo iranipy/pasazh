@@ -11,7 +11,7 @@ def uid_generator():
     return uid
 
 
-class AbstractTimeModel(models.Model):
+class AbstractModel(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     modified = models.DateTimeField(default=timezone.now)
     # created_by = models.ForeignKey(User, on_delete=models.SET_NULL)
@@ -30,43 +30,59 @@ class AbstractTimeModel(models.Model):
         return super().save(*args, **kwargs)
 
 
-class Province(AbstractTimeModel):
+class Province(AbstractModel):
     name = models.CharField(max_length=50, unique=True, default='')
     fa_name = models.CharField(max_length=50, unique=True, default='')
 
 
-class City(AbstractTimeModel):
+class City(AbstractModel):
     name = models.CharField(max_length=50, unique=True, default='')
     fa_name = models.CharField(max_length=50, unique=True, default='')
     code = models.CharField(max_length=5)
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
 
 
-class User(AbstractTimeModel):
+class User(AbstractModel):
     uid = models.CharField(max_length=8, unique=True, default=uid_generator)
-    seller_uid = models.CharField(max_length=16, unique=True, null=True, blank=True)
     mobile = models.CharField(max_length=13, unique=True, validators=[RegexValidator(r'^(\+98|0)?9\d{9}$]$')])
-    fullname = models.CharField(max_length=50)
-    username = models.CharField(max_length=20, null=True, blank=True, unique=True)
+    nick_name = models.CharField(max_length=50, null=True, blank=True)
     email = models.EmailField(null=True, blank=True, unique=True)
-    telephone = models.CharField(max_length=20, null=True, blank=True)
-    city = models.ForeignKey(City, null=True, on_delete=models.SET_NULL)
-    address = models.TextField(max_length=200)
+    score = models.IntegerField(default=100)
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])
     is_deleted = models.BooleanField(default=False)
     
+class SalesMan(AbstractModel):
+    choices = (
+        ('ON', 'Online'),
+        ('OFF', 'Offline'),
+        ('ALL', 'All')
+    )
+    uid = models.CharField(max_length=16, unique=True, null=True, blank=True)
+    full_name = models.CharField(max_length=50, null=True, blank=True)
+    username = models.CharField(max_length=20, null=True, blank=True, unique=True) 
+    store_name = models.CharField(max_length=50) 
+    telephone = models.CharField(max_length=20, null=True, blank=True)
+    city = models.ForeignKey(City, null=True, on_delete=models.SET_NULL)
+    address = models.TextField(max_length=200)
+    open_time = models.TimeField()
+    close_time = models.TimeField()
+    working_days = models.CharField(max_length=27)
+    activity_type = models.CharField(max_length=3, choices=choices)
+    is_private = models.BooleanField(default=False)
+    
+    
 
-
-class OTP(AbstractTimeModel):
+class OTP(AbstractModel):
     code = models.CharField(max_length=128)
     expire = models.IntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-class BlackList(AbstractTimeModel):
+class BlackList(AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
 
 
-class Following(AbstractTimeModel):
+class Following(AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
+
