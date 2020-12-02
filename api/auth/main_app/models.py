@@ -1,13 +1,13 @@
 from django.db import models
 from django.utils import timezone
-from django.core.validators import RegexValidator, validate_image_file_extension
-from .utils import hex_generator
+from django.core.validators import validate_image_file_extension
+from .utils import Security
 
 
 def uid_generator():
-    uid = hex_generator()
+    uid = Security.hex_generator()
     while User.objects.filter(uid=uid).exists():
-        uid = hex_generator()
+        uid = Security.hex_generator()
     return uid
 
 
@@ -41,7 +41,6 @@ class City(AbstractModel):
 
 
 class User(AbstractModel):
-    # validators = [RegexValidator(r'(\+98|0)?9\d{9}]')]
     uid = models.CharField(max_length=8, unique=True, default=uid_generator)
     mobile = models.CharField(max_length=13, unique=True)
     nick_name = models.CharField(max_length=50, null=True, blank=True)

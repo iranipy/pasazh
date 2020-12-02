@@ -1,47 +1,64 @@
-import secrets
-from types import FunctionType
-from main_app.messages import Messages
+from secrets import token_hex
 from rest_framework.response import Response
+from rest_framework import status as stat
+from rest_framework.views import APIView
 
 
-def hex_generator():
-    return secrets.token_hex(4)
+class Security:
 
-
-# class MetaClass(type):
-#     def __new__(cls, name, bases, dct: dict):
-#         for key, value in dct.items():
-#             if isinstance(value, FunctionType):
-#                 dct[key] = staticmethod(value)
-#         return super().__new__(cls, name, bases, dct)
+    @staticmethod
+    def hex_generator():
+        return token_hex(4)
 
 
 class CustomResponse:
-    def bad_request(self):
-        return Response(Messages.BAD_REQUEST[0], status=Messages.BAD_REQUEST[1])
 
-    def not_found(self):
-        return Response(Messages.NOT_FOUND[0], status=Messages.NOT_FOUND[1])
-
-    def success(self, **kwargs):
-
-        for key, value in kwargs.items():
-            if key == 'message':
-                raise KeyError
-            Messages.SUCCESS[0][key] = value
-        return Response(Messages.SUCCESS[0], status=Messages.SUCCESS[1])
-
-    def system_error(self, code=None):
-        if not code:
-            return Response(Messages.SYSTEM_ERROR[0], Messages.sys_error(500))
-
-        return Response(Messages.SYSTEM_ERROR[0], status=Messages.sys_error(code))
     @staticmethod
-    def reset_message():
-        Messages.SUCCESS[0] = {'message': 'OK'}
+    def __get_status(state):
+        return {
+            'success': {'stat': stat.HTTP_200_OK, 'message': ['OK']},
+            'not_found': {'stat': stat.HTTP_404_NOT_FOUND, 'message': ['NOT_FOUND']},
+            'bad_request': {'stat': stat.HTTP_400_BAD_REQUEST, 'message': ['BAD_REQUEST']},
+            'internal_error': {'stat': stat.HTTP_500_INTERNAL_SERVER_ERROR, 'message': ['INTERNAL_ERROR']}
+        }[state]
+
+    @classmethod
+    def __generate_response(cls, state='success', message=None, data=None):
+        status = cls.__get_status(state)
+        if message is None:
+            message = status['message']
+        result = {
+            'message': [m for m in message if isinstance(m, str)],
+            'status': status['stat'],
+            'data': data
+        }
+        return Response(data=result, status=status['stat'])
+
+    @classmethod
+    def success(cls, **kwargs):
+        return cls.__generate_response(state='success', **kwargs)
+
+    @classmethod
+    def not_found(cls, **kwargs):
+        return cls.__generate_response(state='not_found', **kwargs)
+
+    @classmethod
+    def bad_request(cls, **kwargs):
+        return cls.__generate_response(state='bad_request', **kwargs)
+
+    @classmethod
+    def internal_error(cls, **kwargs):
+        return cls.__generate_response(state='internal_error', **kwargs)
 
 
+class MetaApiViewClass(APIView):
 
+    @staticmethod
+    def generic_decor(func):
+        def inner(self, request):
+            try:
+                return func(self, request)
+            except Exception as e:
+                return CustomResponse.internal_error(message=[str(e)])
 
-
-
+        return inner
