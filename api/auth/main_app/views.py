@@ -1,29 +1,46 @@
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
-from rest_framework import viewsets
-from rest_framework.permissions import IsAdminUser
+from rest_framework.generics import RetrieveAPIView
 from .models import User
 from .serializers import UserSerializer
+from .utils import CustomResponse
+
+custom_response = CustomResponse()
 
 
 class Login(APIView):
-
     def post(self, request):
         phone = self.request.data.get('phone')
         if not phone:
-            return Response({'message': 'NO_VALID_PHONE'}, status=status.HTTP_400_BAD_REQUEST)
+            return custom_response.bad_request()
         try:
             user = User.objects.get(mobile=phone)
-            return Response({'message': 'OK', 'uid': user.uid}, status=status.HTTP_200_OK)
+            response = custom_response.success(uid=user.uid)
+            custom_response.reset_message()
+            return response
         except User.DoesNotExist:
-            return Response({'message': 'NOT_FOUND'}, status=status.HTTP_404_NOT_FOUND)
+            return custom_response.not_found()
 
-        except:
-            return Response({'message': 'SYSTEM_ERROR'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        # except:
+        #     return custom_response.system_error(503)
 
 
-class UserViewSet(viewsets.ModelViewSet):  # Test
+class Verify(RetrieveAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [IsAdminUser]
+
+
+class DeleteAccount(APIView):
+    def put(self, request):
+        phone = self.request.data.get('phone')
+        if not phone:
+            return custom_response.bad_request()
+        try:
+            user = User.objects.get(mobile=phone)
+            user.is_deleted = True
+            user.is_active = False
+            user.save()
+            return custom_response.success()
+        except User.DoesNotExist:
+            return custom_response.not_found()
+        # except:
+        #     return custom_response.system_error()

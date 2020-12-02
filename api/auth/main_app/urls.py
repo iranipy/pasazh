@@ -1,10 +1,7 @@
-from django.urls import path, include
-from .views import Login, UserViewSet
-from rest_framework.routers import DefaultRouter
-# test
-router = DefaultRouter()
-router.register(r'users', UserViewSet)
+from django.urls import path
+from .views import Login, Verify, DeleteAccount
 urlpatterns = [
     path('login/', Login.as_view(), name='login'),
-    path('fancy/', include(router.urls)),
+    path('users/verify/<int:pk>', Verify.as_view(), name='verify'),
+    path('users/delete-account/', DeleteAccount.as_view(), name='delete-account')
 ]
