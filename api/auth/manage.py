@@ -3,9 +3,9 @@
 
 import sys
 from os import environ
-from dotenv import load_dotenv, find_dotenv
+from dotenv import load_dotenv
 
-load_dotenv(find_dotenv())
+load_dotenv(override=True)
 
 
 def main():
