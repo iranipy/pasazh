@@ -11,7 +11,7 @@ class Login(MetaApiViewClass):
         params_key = ['mobile']
         params = self.get_params(self.request, params_key)
         try:
-            user = User.objects.get(mobile=params.mobile)
+            user = User.objects.get(mobile=params.get('mobile'))
             return self.success(data={'uid': user.uid})
         except User.DoesNotExist:
             return self.not_found()
