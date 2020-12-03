@@ -52,13 +52,37 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView):
+    success = CustomResponse.success
+    not_found = CustomResponse.not_found
+    bad_request = CustomResponse.bad_request
+    internal_error = CustomResponse.internal_error
 
-    @staticmethod
-    def generic_decor(func):
+    class NotFound(Exception):
+        def __init__(self, message):
+            self.message = message
+
+    class BadRequest(Exception):
+        def __init__(self, message):
+            self.message = message
+
+    def get_params(self, request, params_key):
+        params = {}
+        for p in params_key:
+            params[p] = request.data.get(p)
+            if params[p] is None:
+                raise self.BadRequest([f'{p.upper()}_PARAMETER_IS_REQUIRED'])
+        return params
+
+    @classmethod
+    def generic_decor(cls, func):
         def inner(self, request):
             try:
                 return func(self, request)
+            except cls.NotFound as e:
+                return cls.not_found(message=e.message)
+            except cls.BadRequest as e:
+                return cls.bad_request(message=e.message)
             except Exception as e:
-                return CustomResponse.internal_error(message=[str(e)])
+                return cls.internal_error(message=[str(e)])
 
         return inner

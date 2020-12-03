@@ -1,5 +1,5 @@
 from .models import User
-from .utils import CustomResponse, MetaApiViewClass
+from .utils import MetaApiViewClass
 from rest_framework.generics import RetrieveAPIView
 # from .serializers import UserSerializer
 
@@ -8,14 +8,13 @@ class Login(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor
     def post(self, request):
-        mobile = self.request.data.get('mobile')
-        if not mobile:
-            return CustomResponse.bad_request(message=['MOBILE_PARAMETER_IS_REQUIRED'])
+        params_key = ['mobile']
+        params = self.get_params(self.request, params_key)
         try:
-            user = User.objects.get(mobile=mobile)
-            return CustomResponse.success(data={'uid': user.uid})
+            user = User.objects.get(mobile=params.mobile)
+            return self.success(data={'uid': user.uid})
         except User.DoesNotExist:
-            return CustomResponse.not_found()
+            return self.not_found()
 
 
 # uncomment when finished
