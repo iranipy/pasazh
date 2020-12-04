@@ -3,4 +3,3 @@ from .models import User, SalesMan
 
 admin.site.register(User)
 admin.site.register(SalesMan)
-
