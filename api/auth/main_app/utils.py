@@ -1,14 +1,37 @@
-from secrets import token_hex
+from secrets import token_hex, randbelow
 from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
-
-
+import time
+from os import getenv
+import jwt
+import datetime
 class Security:
 
     @staticmethod
     def hex_generator():
         return token_hex(4)
+
+    @staticmethod
+    def otp_generator():
+        return randbelow(99999)
+
+    @staticmethod
+    def jwt_token_generator(**kwargs):
+        secret = getenv("SECRET_KEY")
+        kwargs['exp'] = datetime.datetime.utcnow() + datetime.timedelta(weeks=100)
+        return jwt.encode(kwargs, secret)
+
+    @staticmethod
+    def jwt_token_decoder(token):
+        secret = getenv("SECRET_KEY")
+        try:
+            decoded_token = jwt.decode(token, secret)
+        except jwt.exceptions.ExpiredSignatureError as e:
+            return False
+        return decoded_token
+
+
 
 
 class CustomResponse:
@@ -86,3 +109,14 @@ class MetaApiViewClass(APIView):
                 return cls.internal_error(message=[str(e)])
 
         return inner
+
+
+class OTPRecord:
+
+    def __init__(self):
+        self.expire = int(round(time.time()) * 1000) + (1000 * 20 * int(getenv("CONFIRM_CODE_EXPIRE")))
+        self.code = Security.otp_generator()
+
+    @staticmethod
+    def current_time():
+        return int(round(time.time()) * 1000)

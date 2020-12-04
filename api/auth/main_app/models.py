@@ -79,7 +79,7 @@ class SalesMan(AbstractModel):
 
 class OTP(AbstractModel):
     code = models.CharField(max_length=128)
-    expire = models.IntegerField()
+    expire = models.BigIntegerField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 
