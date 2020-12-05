@@ -6,6 +6,9 @@ import time
 from os import getenv
 import jwt
 import datetime
+from django.forms.models import model_to_dict
+
+
 class Security:
 
     @staticmethod
@@ -30,8 +33,6 @@ class Security:
         except jwt.exceptions.ExpiredSignatureError as e:
             return False
         return decoded_token
-
-
 
 
 class CustomResponse:
@@ -88,10 +89,14 @@ class MetaApiViewClass(APIView):
         def __init__(self, message):
             self.message = message
 
-    def get_params(self, request, params_key):
+    def get_params(self, request, params_key, option='data'):
         params = {}
+        request_options = {
+            'data': request.data,
+            'header': request.headers
+        }
         for p in params_key:
-            params[p] = request.data.get(p)
+            params[p] = request_options[option].get(p)
             if params[p] is None:
                 raise self.BadRequest([f'{p.upper()}_PARAMETER_IS_REQUIRED'])
         return params
@@ -120,3 +125,15 @@ class OTPRecord:
     @staticmethod
     def current_time():
         return int(round(time.time()) * 1000)
+
+
+class UserResponse:
+    @staticmethod
+    def serialize(instance):
+        return model_to_dict(instance)
+
+    @staticmethod
+    def check(instance):
+        if instance.is_deleted or not instance.is_active:
+            return True
+
