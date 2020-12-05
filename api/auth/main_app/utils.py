@@ -1,4 +1,4 @@
-from secrets import token_hex, randbelow
+from secrets import token_hex, choice
 from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
@@ -7,7 +7,7 @@ from os import getenv
 import jwt
 import datetime
 from django.forms.models import model_to_dict
-
+import string
 
 class Security:
 
@@ -17,7 +17,11 @@ class Security:
 
     @staticmethod
     def otp_generator():
-        return randbelow(99999)
+        digits = list(string.digits)
+        otp = str()
+        for _ in range(5):
+            otp += choice(digits)
+        return otp
 
     @staticmethod
     def jwt_token_generator(**kwargs):
