@@ -1,40 +1,39 @@
-from secrets import token_hex, choice
+import time
+import jwt
+import datetime
+from os import getenv
+from random import randint
+from math import pow
+from secrets import token_hex
 from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
-import time
-from os import getenv
-import jwt
-import datetime
 from django.forms.models import model_to_dict
-import string
+
 
 class Security:
+    __secret = getenv("SECRET_KEY")
 
     @staticmethod
     def hex_generator():
         return token_hex(4)
 
     @staticmethod
-    def otp_generator():
-        digits = list(string.digits)
-        otp = str()
-        for _ in range(5):
-            otp += choice(digits)
-        return otp
+    def otp_generator(length):
+        _min = int(pow(10, length - 1))
+        _max = int(pow(10, length) - 1)
+        return str(randint(_min, _max))
 
-    @staticmethod
-    def jwt_token_generator(**kwargs):
-        secret = getenv("SECRET_KEY")
+    @classmethod
+    def jwt_token_generator(cls, **kwargs):
         kwargs['exp'] = datetime.datetime.utcnow() + datetime.timedelta(weeks=100)
-        return jwt.encode(kwargs, secret)
+        return jwt.encode(kwargs, cls.__secret)
 
-    @staticmethod
-    def jwt_token_decoder(token):
-        secret = getenv("SECRET_KEY")
+    @classmethod
+    def jwt_token_decoder(cls, token):
         try:
-            decoded_token = jwt.decode(token, secret)
-        except jwt.exceptions.ExpiredSignatureError as e:
+            decoded_token = jwt.decode(token, cls.__secret)
+        except jwt.exceptions.ExpiredSignatureError:
             return False
         return decoded_token
 
@@ -93,14 +92,10 @@ class MetaApiViewClass(APIView):
         def __init__(self, message):
             self.message = message
 
-    def get_params(self, request, params_key, option='data'):
+    def get_params(self, obj_to_check, params_key):
         params = {}
-        request_options = {
-            'data': request.data,
-            'header': request.headers
-        }
         for p in params_key:
-            params[p] = request_options[option].get(p)
+            params[p] = obj_to_check.get(p)
             if params[p] is None:
                 raise self.BadRequest([f'{p.upper()}_PARAMETER_IS_REQUIRED'])
         return params
@@ -122,9 +117,12 @@ class MetaApiViewClass(APIView):
 
 class OTPRecord:
 
-    def __init__(self):
-        self.expire = int(round(time.time()) * 1000) + (1000 * 20 * int(getenv("CONFIRM_CODE_EXPIRE")))
-        self.code = Security.otp_generator()
+    @staticmethod
+    def create_fields():
+        return {
+            'expire': int(round(time.time()) * 1000) + (1000 * 60 * int(getenv("CONFIRM_CODE_EXPIRE_MINUTES"))),
+            'code': Security.otp_generator(6)
+        }
 
     @staticmethod
     def current_time():
@@ -132,12 +130,11 @@ class OTPRecord:
 
 
 class UserResponse:
+
     @staticmethod
     def serialize(instance):
         return model_to_dict(instance)
 
     @staticmethod
     def check(instance):
-        if instance.is_deleted or not instance.is_active:
-            return True
-
+        return instance.is_deleted or not instance.is_active
