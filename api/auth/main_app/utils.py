@@ -1,6 +1,7 @@
 import time
 import jwt
 import datetime
+import main_app.models as models
 from os import getenv
 from random import randint
 from math import pow
@@ -9,7 +10,8 @@ from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
 from django.forms.models import model_to_dict
-
+from functools import wraps
+a = 2
 
 class Security:
     __secret = getenv("SECRET_KEY")
@@ -83,6 +85,8 @@ class MetaApiViewClass(APIView):
     not_found = CustomResponse.not_found
     bad_request = CustomResponse.bad_request
     internal_error = CustomResponse.internal_error
+    user = None
+    user_info = None
 
     class NotFound(Exception):
         def __init__(self, message):
@@ -92,6 +96,7 @@ class MetaApiViewClass(APIView):
         def __init__(self, message):
             self.message = message
 
+    @classmethod
     def get_params(self, obj_to_check, params_key):
         params = {}
         for p in params_key:
@@ -113,6 +118,27 @@ class MetaApiViewClass(APIView):
                 return cls.internal_error(message=[str(e)])
 
         return inner
+
+    @classmethod
+    def check_token(cls, serialize: bool):
+        def decorator(f):
+            wraps(f)
+
+            def wrapper(*args, **kwargs):
+                params_key = ['authorization']
+                params = cls.get_params(args[1].headers, params_key)
+                token = Security.jwt_token_decoder(params['authorization'])
+                if not token:
+                    return MetaApiViewClass.bad_request(message=['INVALID_TOKEN'])
+                cls.user = models.User.objects.get(id=token['user_id'])
+                if UserResponse.check(cls.user):
+                    return cls.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+                if serialize:
+                    cls.user_info = UserResponse.serialize(cls.user)
+                return f(*args, **kwargs)
+
+            return wrapper
+        return decorator
 
 
 class OTPRecord:

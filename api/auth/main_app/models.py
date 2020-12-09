@@ -1,13 +1,13 @@
 from django.db import models
 from django.utils import timezone
 from django.core.validators import validate_image_file_extension
-from .utils import Security
+import main_app.utils as utils
 
 
 def uid_generator():
-    uid = Security.hex_generator()
+    uid = utils.Security.hex_generator()
     while User.objects.filter(uid=uid).exists():
-        uid = Security.hex_generator()
+        uid = utils.Security.hex_generator()
     return uid
 
 
@@ -80,6 +80,7 @@ class SalesMan(AbstractModel):
 class OTP(AbstractModel):
     code = models.CharField(max_length=128)
     expire = models.BigIntegerField()
+    try_count = models.IntegerField(default=0)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 

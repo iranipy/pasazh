@@ -1,5 +1,9 @@
+import datetime
+from os import getenv
 from .models import User, OTP, City, SalesMan
 from .utils import MetaApiViewClass, OTPRecord, Security, UserResponse
+
+login_limitation_hour = getenv("LOGIN_ATTEMPT_LIMIT_HOUR")
 
 
 class Login(MetaApiViewClass):
@@ -18,12 +22,21 @@ class Login(MetaApiViewClass):
 
         if UserResponse.check(user):
             return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+        try:
+            confirmation_try = OTP.objects.filter(user=user).exclude(expire=0).order_by('-created_at')[2]
+        except IndexError:
+            otp = OTPRecord.create_fields()
+            OTP.objects.create(user=user, **otp).save()
 
-        new_otp = OTP.objects.create(user=user, **OTPRecord.create_fields())
-        new_otp.save()
-        otp = OTP.objects.get(id=new_otp.id)
+            return self.success(message=['CODE_SENT'], data={'confirm_code': otp['code']})
+        difference = datetime.datetime.utcnow() - confirmation_try.created_at.replace(tzinfo=None)
+        difference = difference.seconds // 3600
+        if difference < login_limitation_hour:
+            return self.bad_request(message=['TOO_MANY_LOGIN_ATTEMPT'])
+        otp = OTPRecord.create_fields()
+        OTP.objects.create(user=user, **otp).save()
 
-        return self.success(message=['CODE_SENT'], data={'confirm_code': otp.code})
+        return self.success(message=['CODE_SENT'], data={'confirm_code': otp['code']})
 
 
 class ConfirmCode(MetaApiViewClass):
@@ -33,18 +46,20 @@ class ConfirmCode(MetaApiViewClass):
         params_key = ['confirm_code', 'mobile']
         params = self.get_params(self.request.data, params_key)
 
-        try:
-            user = User.objects.get(mobile=params['mobile'])
-            otp = OTP.objects.filter(code=params['confirm_code'], user=user).order_by('-created_at')[0]
-        except OTP.DoesNotExist:
-            return self.bad_request(message=['WRONG_CODE'])
-
+        user = User.objects.get(mobile=params['mobile'])
+        otp = OTP.objects.filter(user=user).order_by('-created_at')[0]
+        otp.try_count += 1
+        otp.save()
         if UserResponse.check(user):
             return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
         elif otp.expire < OTPRecord.current_time():
             return self.bad_request(message=['CODE_EXPIRED'])
+        elif otp.try_count > 4:
+            return self.bad_request(message=['TOO_MANY_REQUEST'])
+        elif not params['confirm_code'] == otp.code:
+            return self.bad_request(message=['WRONG_CODE'])
 
-        otp.expire = -1
+        otp.expire = 0
         otp.save()
 
         token = Security.jwt_token_generator(user_id=user.id)
@@ -55,58 +70,26 @@ class ConfirmCode(MetaApiViewClass):
 class Verify(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.check_token(serialize=True)
     def get(self, request):
-        params_key = ['authorization']
-        params = self.get_params(self.request.headers, params_key)
-
-        token = Security.jwt_token_decoder(params['authorization'])
-        if not token:
-            return self.bad_request(message=['INVALID_TOKEN'])
-
-        user = User.objects.get(id=token['user_id'])
-        if UserResponse.check(user):
-            return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
-
-        user = UserResponse.serialize(user)
-        return self.success(data=user)
+        return self.success(data=self.user_info)
 
 
 class DeleteAccount(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.check_token(serialize=False)
     def put(self, request):
-        params_key = ['authorization']
-        params = self.get_params(self.request.headers, params_key)
-
-        token = Security.jwt_token_decoder(params['authorization'])
-        if not token:
-            return self.bad_request(message=['INVALID_TOKEN'])
-
-        user = User.objects.get(id=token['user_id'])
-        if UserResponse.check(user):
-            return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
-
-        user.is_deleted = True
-        user.save()
-
+        self.user.is_deleted = True
+        self.user.save()
         return self.success(message=['USER_DELETED'])
 
 
 class SalesManView(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.check_token(serialize=False)
     def post(self, request):
-        params_key = ['authorization']
-        params = self.get_params(self.request.headers, params_key)
-
-        token = Security.jwt_token_decoder(params['authorization'])
-        if not token:
-            return self.bad_request(message=['INVALID_TOKEN'])
-
-        user = User.objects.get(id=token['user_id'])
-        if UserResponse.check(user):
-            return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
-
         params_key = ['store_name', 'city_id', 'address', 'open_time',
                       'close_time', 'working_days', 'activity_type']
 
@@ -119,4 +102,4 @@ class SalesManView(MetaApiViewClass):
                                 working_days=params['working_days'],
                                 activity_type=params['activity_type']).save()
 
-        return self.success(message=['SALESMAN_CREATED'], data={'userid': user.id})
+        return self.success(message=['SALESMAN_CREATED'], data={'userid': self.user.id})
