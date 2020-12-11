@@ -92,6 +92,7 @@ class MetaApiViewClass(APIView):
     internal_error = CustomResponse.internal_error
     token_info = None
     user = None
+    dangerous_attribute = getenv("DANGEROUS_ATTRIBUTE").split(',')
 
     class NotFound(Exception):
         def __init__(self, message):
@@ -102,7 +103,9 @@ class MetaApiViewClass(APIView):
             self.message = message
 
     @classmethod
-    def get_params(cls, obj_to_check: dict, params_key: list):
+    def get_params(cls, obj_to_check: dict, params_key: list,  required: bool = True):
+        if not required:
+            return obj_to_check
         params = {}
         for p in params_key:
             params[p] = obj_to_check.get(p)

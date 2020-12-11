@@ -5,7 +5,6 @@ from .utils import MetaApiViewClass, OTPRecord, Security, UserResponse
 
 
 class Login(MetaApiViewClass):
-
     __login_attempt_limit_hour = getenv("LOGIN_ATTEMPT_LIMIT_HOUR")
 
     @MetaApiViewClass.generic_decor
@@ -40,7 +39,6 @@ class Login(MetaApiViewClass):
 
 
 class ConfirmCode(MetaApiViewClass):
-
     __confirm_code_try_count_limit = getenv("CONFIRM_CODE_TRY_COUNT_LIMIT")
 
     @MetaApiViewClass.generic_decor
@@ -81,11 +79,27 @@ class Verify(MetaApiViewClass):
         return self.success(data=self.user)
 
 
+class UserProfileUpdate(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.check_token(False)
+    def put(self, request):
+        params_key = None
+        params = self.get_params(self.request.data, params_key, required=False)
+        for item in params:
+            if item not in self.user.__dict__:
+                return self.bad_request(message=['UNKNOWN_ATTRIBUTE_WAS_GIVEN'])
+            elif item in self.dangerous_attribute:
+                return self.bad_request(message=['RESTRICTED_ATTRIBUTE'])
+            setattr(self.user, item, params[item])
+        self.user.save()
+        return self.success(message=['USER_UPDATED'])
+
+
 class DeleteAccount(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor
     @MetaApiViewClass.check_token(False)
-    def put(self, request):
+    def delete(self, request):
         self.user.is_deleted = True
         self.user.save()
         return self.success(message=['USER_DELETED'])
