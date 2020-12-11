@@ -58,74 +58,91 @@ class CreateOtp(MetaApiViewClass):
 
 # class ConfirmCode(MetaApiViewClass):
 
-    # __confirm_code_try_count_limit = getenv("CONFIRM_CODE_TRY_COUNT_LIMIT")
-    #
-    # @MetaApiViewClass.generic_decor
-    # def post(self, request):
-    #     params_key = ['confirm_code', 'mobile']
-    #     params = self.get_params(self.request.data, params_key)
-    #
-    #     user = User.objects.get(mobile=params['mobile'])
-    #     if ResponseUtils.check_user(user):
-    #         return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
-    #
-    #     otp = OTP.objects.filter(user=user).order_by('-created_at')[0]
-    #
-    #     if otp.expire < OTPRecord.current_time():
-    #         return self.bad_request(message=['CODE_EXPIRED'])
-    #     elif otp.try_count >= int(self.__confirm_code_try_count_limit):
-    #         return self.bad_request(message=['TOO_MANY_REQUESTS'])
-    #
-    #     otp.try_count += 1
-    #
-    #     if params['confirm_code'] != otp.code:
-    #         otp.save()
-    #         return self.bad_request(message=['WRONG_CODE'])
-    #
-    #     otp.expire = 0
-    #     otp.save()
-    #
-    #     token = Security.jwt_token_generator(user_id=user.id)
-    #
-    #     return self.success(message=['CODE_CONFIRMED'], data={'token': token})
+# __confirm_code_try_count_limit = getenv("CONFIRM_CODE_TRY_COUNT_LIMIT")
+#
+# @MetaApiViewClass.generic_decor
+# def post(self, request):
+#     params_key = ['confirm_code', 'mobile']
+#     params = self.get_params(self.request.data, params_key)
+#
+#     user = User.objects.get(mobile=params['mobile'])
+#     if ResponseUtils.check_user(user):
+#         return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+#
+#     otp = OTP.objects.filter(user=user).order_by('-created_at')[0]
+#
+#     if otp.expire < OTPRecord.current_time():
+#         return self.bad_request(message=['CODE_EXPIRED'])
+#     elif otp.try_count >= int(self.__confirm_code_try_count_limit):
+#         return self.bad_request(message=['TOO_MANY_REQUESTS'])
+#
+#     otp.try_count += 1
+#
+#     if params['confirm_code'] != otp.code:
+#         otp.save()
+#         return self.bad_request(message=['WRONG_CODE'])
+#
+#     otp.expire = 0
+#     otp.save()
+#
+#     token = Security.jwt_token_generator(user_id=user.id)
+#
+#     return self.success(message=['CODE_CONFIRMED'], data={'token': token})
 
 
 # class Verify(MetaApiViewClass):
 
-    # @MetaApiViewClass.generic_decor
-    # @MetaApiViewClass.check_token(True)
-    # def get(self, request):
-    #     return self.success(data=self.user)
+# @MetaApiViewClass.generic_decor
+# @MetaApiViewClass.check_token(True)
+# def get(self, request):
+#     return self.success(data=self.user)
+
+
+# class UserProfileUpdate(MetaApiViewClass):
+
+#     @MetaApiViewClass.generic_decor
+#     @MetaApiViewClass.check_token(False)
+#     def put(self, request):
+#         params_key = None
+#         params = self.get_params(self.request.data, params_key, required=False)
+#         for item in params:
+#             if item not in self.user.__dict__:
+#                 return self.bad_request(message=['UNKNOWN_ATTRIBUTE_WAS_GIVEN'])
+#             elif item in self.dangerous_attribute:
+#                 return self.bad_request(message=['RESTRICTED_ATTRIBUTE'])
+#             setattr(self.user, item, params[item])
+#         self.user.save()
+#         return self.success(message=['USER_UPDATED'])
 
 
 # class DeleteAccount(MetaApiViewClass):
 
-    # @MetaApiViewClass.generic_decor
-    # @MetaApiViewClass.check_token(False)
-    # def put(self, request):
-    #     self.user.is_deleted = True
-    #     self.user.save()
-    #     return self.success(message=['USER_DELETED'])
+# @MetaApiViewClass.generic_decor
+# @MetaApiViewClass.check_token(False)
+# def put(self, request):
+#     self.user.is_deleted = True
+#     self.user.save()
+#     return self.success(message=['USER_DELETED'])
 
 
 # class SalesManView(MetaApiViewClass):
 
-    # @MetaApiViewClass.generic_decor
-    # @MetaApiViewClass.check_token(False)
-    # def post(self, request):
-    #     params = self.get_params(self.request.data, [
-    #         'store_name', 'city_id', 'address', 'open_time',
-    #         'close_time', 'working_days', 'activity_type'
-    #     ])
-    #
-    #     city = City.objects.get(id=params['city_id'])
-    #     if not city:
-    #         return self.bad_request(message=['INVALID_CITY_ID'])
-    #
-    #     SalesMan.objects.create(
-    #         store_name=params['store_name'], city=city, address=params['address'],
-    #         open_time=params['open_time'], close_time=params['close_time'],
-    #         working_days=params['working_days'], activity_type=params['activity_type']
-    #     ).save()
-    #
-    #     return self.success(message=['SALESMAN_CREATED'])
+# @MetaApiViewClass.generic_decor
+# @MetaApiViewClass.check_token(False)
+# def post(self, request):
+#     params = self.get_params(self.request.data, [
+#         'store_name', 'city_id', 'address', 'open_time',
+#         'close_time', 'working_days', 'activity_type'
+#     ])
+#
+#     city = City.objects.get(id=params['city_id'])
+#     if not city:
+#         return self.bad_request(message=['INVALID_CITY_ID'])
+#
+#     SalesMan.objects.create(
+#         store_name=params['store_name'], city=city, address=params['address'],
+#         open_time=params['open_time'], close_time=params['close_time'],
+#         working_days=params['working_days'], activity_type=params['activity_type']
+#     ).save()
+#
+#     return self.success(message=['SALESMAN_CREATED'])
