@@ -136,7 +136,7 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
     user = None
 
     @classmethod
-    def get_params(cls, obj_to_check: dict, params_key: list,  required: bool = True):
+    def get_params(cls, obj_to_check: dict, params_key: list, required=True):
         if not required:
             return obj_to_check
         params = {}
