@@ -1,9 +1,7 @@
 from django.urls import path
-from .views import Login, Verify, ConfirmCode, DeleteAccount
+from .views import FindUserByMobile, CreateOtp
 
 urlpatterns = [
-    path('login/', Login.as_view(), name='login'),
-    path('verify/', Verify.as_view(), name='verify'),
-    path('confirm-code/', ConfirmCode.as_view(), name='confirm'),
-    path('delete-account/', DeleteAccount.as_view(), name='delete-account')
+    path('find-user-by-mobile/', FindUserByMobile.as_view(), name='find-user-by-mobile'),
+    path('create-otp/', CreateOtp.as_view(), name='create-otp')
 ]

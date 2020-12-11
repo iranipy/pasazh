@@ -42,7 +42,48 @@ class Security:
         return decoded_token
 
 
+class OTPRecord:
+
+    @classmethod
+    def create_fields(cls, confirm_code_expire_minutes):
+        return {
+            'expire': int(round(time.time()) * 1000) + (1000 * 60 * int(confirm_code_expire_minutes)),
+            'code': Security.otp_generator(6)
+        }
+
+    @staticmethod
+    def current_time():
+        return int(round(time.time()) * 1000)
+
+
+class ResponseUtils:
+
+    @staticmethod
+    def serialize(instance):
+        return model_to_dict(instance)
+
+    @staticmethod
+    def check_user(user):
+        return user.get('is_deleted') or not user.get('is_active')
+
+
 class CustomResponse:
+
+    class CustomResponseException(Exception):
+        def __init__(self, state='internal_error', message=None, data=None):
+            if message is None:
+                message = ['INTERNAL_ERROR']
+            self.state = state
+            self.message = message
+            self.data = data
+
+    class NotFound(CustomResponseException):
+        def __init__(self, message, data=None):
+            super().__init__("not_found", message, data)
+
+    class BadRequest(CustomResponseException):
+        def __init__(self, message, data=None):
+            super().__init__("bad_request", message, data)
 
     @staticmethod
     def __get_status(state: str):
@@ -60,10 +101,14 @@ class CustomResponse:
             message = status['message']
         result = {
             'message': [m for m in message if isinstance(m, str)],
-            'status': status['stat'],
+            'state': state,
             'data': data
         }
         return Response(data=result, status=status['stat'])
+
+    @classmethod
+    def general_response(cls, **kwargs):
+        return cls.__generate_response(**kwargs)
 
     @classmethod
     def success(cls, **kwargs):
@@ -82,24 +127,12 @@ class CustomResponse:
         return cls.__generate_response(state='internal_error', **kwargs)
 
 
-class MetaApiViewClass(APIView):
+class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
 
     __auth_token_key = getenv("AUTH_TOKEN_KEY")
 
-    success = CustomResponse.success
-    not_found = CustomResponse.not_found
-    bad_request = CustomResponse.bad_request
-    internal_error = CustomResponse.internal_error
     token_info = None
     user = None
-
-    class NotFound(Exception):
-        def __init__(self, message):
-            self.message = message
-
-    class BadRequest(Exception):
-        def __init__(self, message):
-            self.message = message
 
     @classmethod
     def get_params(cls, obj_to_check: dict, params_key: list):
@@ -116,9 +149,11 @@ class MetaApiViewClass(APIView):
             try:
                 return func(self, request)
             except cls.NotFound as e:
-                return cls.not_found(message=e.message)
+                return cls.not_found(message=e.message, data=e.data)
             except cls.BadRequest as e:
-                return cls.bad_request(message=e.message)
+                return cls.bad_request(message=e.message, data=e.data)
+            except cls.CustomResponseException as e:
+                return cls.general_response(state=e.state, message=e.message, data=e.data)
             except Exception as e:
                 return cls.internal_error(message=[str(e)])
 
@@ -142,8 +177,8 @@ class MetaApiViewClass(APIView):
                 cls.token_info = models.User.objects.get(id=token['user_id'])
 
                 if serialize:
-                    cls.user = UserResponse.serialize(cls.token_info)
-                    if UserResponse.check(cls.user):
+                    cls.user = ResponseUtils.serialize(cls.token_info)
+                    if ResponseUtils.check_user(cls.user):
                         return cls.bad_request(message=['DELETED/BANNED_ACCOUNT'])
 
                 return f(*args, **kwargs)
@@ -151,30 +186,3 @@ class MetaApiViewClass(APIView):
             return wrapper
 
         return decorator
-
-
-class OTPRecord:
-
-    __confirm_code_expire_minutes = getenv("CONFIRM_CODE_EXPIRE_MINUTES")
-
-    @classmethod
-    def create_fields(cls):
-        return {
-            'expire': int(round(time.time()) * 1000) + (1000 * 60 * int(cls.__confirm_code_expire_minutes)),
-            'code': Security.otp_generator(6)
-        }
-
-    @staticmethod
-    def current_time():
-        return int(round(time.time()) * 1000)
-
-
-class UserResponse:
-
-    @staticmethod
-    def serialize(instance):
-        return model_to_dict(instance)
-
-    @staticmethod
-    def check(user):
-        return user.get('is_deleted') or not user.get('is_active')
