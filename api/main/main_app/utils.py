@@ -3,10 +3,17 @@ from os import getenv
 from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
+from django.forms import model_to_dict
+
+
+class ResponseUtils:
+
+    @staticmethod
+    def serialize(instance):
+        return model_to_dict(instance)
 
 
 class CustomResponse:
-
     class CustomResponseException(Exception):
         def __init__(self, state='internal_error', message=None, data=None):
             if message is None:
@@ -66,7 +73,6 @@ class CustomResponse:
 
 
 class CustomRequest:
-
     __base_url = f"http://{getenv('HOST')}:{getenv('AUTH_PORT')}"
 
     @classmethod
@@ -97,7 +103,6 @@ class CustomRequest:
 
 
 class MetaApiViewClass(APIView, CustomResponse, CustomRequest):
-
     __auth_token_key = getenv("AUTH_TOKEN_KEY")
 
     token_info = None
@@ -114,16 +119,20 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest):
 
     @classmethod
     def generic_decor(cls, protected=False):
-        def generic_decor(func):
-            def inner(self, request):
+        def decorator(func):
+            def wrapper(*args, **kwargs):
                 if protected:
                     auth_token_key = cls.__auth_token_key
                     params_key = [auth_token_key]
-                    params = cls.get_params(request.headers, params_key)
-                    print("protected", params)  # should verify token by sending request to auth /verify
+                    params = cls.get_params(args[1].headers, params_key)
+                    cls.user = cls.get_req('/verify', params=None, return_data=True,
+                                           headers={auth_token_key: params[auth_token_key]})
+                    if cls.user is None:
+                        return cls.not_found()
+                    return func(*args, **kwargs)
 
                 try:
-                    return func(self, request)
+                    return func(*args, **kwargs)
                 except cls.NotFound as e:
                     return cls.not_found(message=e.message, data=e.data)
                 except cls.BadRequest as e:
@@ -133,6 +142,6 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest):
                 except Exception as e:
                     return cls.internal_error(message=[str(e)])
 
-            return inner
+            return wrapper
 
-        return generic_decor
+        return decorator

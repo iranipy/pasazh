@@ -55,11 +55,10 @@ class CreateOtp(MetaApiViewClass):
 
         return self.success(message=['CODE_SENT'])
 
-
 # class ConfirmCode(MetaApiViewClass):
 
 # __confirm_code_try_count_limit = getenv("CONFIRM_CODE_TRY_COUNT_LIMIT")
-#
+
 # @MetaApiViewClass.generic_decor
 # def post(self, request):
 #     params_key = ['confirm_code', 'mobile']

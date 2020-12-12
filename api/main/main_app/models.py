@@ -37,11 +37,12 @@ class Product(AbstractModel):
     count = models.IntegerField()
     description = models.TextField(max_length=1000)
     price = models.FloatField()
-    rate = models.FloatField()
-    rate_count = models.IntegerField()
-    view_count = models.IntegerField()
+    rate = models.FloatField(null=True, blank=True)
+    rate_count = models.IntegerField(null=True, blank=True)
+    view_count = models.IntegerField(default=1)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     thumbnail = models.BinaryField(null=True, validators=[validate_image_file_extension])
+
     class Meta:
         db_table = 'product'
 
@@ -55,7 +56,6 @@ class ProductAttachment(AbstractModel):
 
     class Meta:
         db_table = 'product_attachment'
-
 
 
 class Option(AbstractModel):
