@@ -118,7 +118,7 @@ class CreateOtp(MetaApiViewClass):
 
 # @MetaApiViewClass.generic_decor
 # @MetaApiViewClass.check_token(False)
-# def put(self, request):
+# def delete(self, request):
 #     self.user.is_deleted = True
 #     self.user.save()
 #     return self.success(message=['USER_DELETED'])
