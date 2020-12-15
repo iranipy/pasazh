@@ -133,6 +133,7 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
     # __dangerous_attribute = getenv("DANGEROUS_ATTRIBUTE").split(',')
 
     token_info = None
+    decoded_token = None
     user = None
 
     @classmethod
@@ -172,13 +173,11 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
                 auth_token_key = cls.__auth_token_key
                 params_key = [auth_token_key]
                 params = cls.get_params(request.headers, params_key)
-
-                token = Security.jwt_token_decoder(params[auth_token_key])
-                if not token:
+                cls.decoded_token = Security.jwt_token_decoder(params[auth_token_key])
+                if not cls.decoded_token:
                     return MetaApiViewClass.bad_request(message=['INVALID_TOKEN'])
 
-                cls.token_info = models.User.objects.get(id=token['user_id'])
-
+                cls.token_info = models.User.objects.get(id=cls.decoded_token['user_id'])
                 if serialize:
                     cls.user = ResponseUtils.serialize(cls.token_info)
                     if ResponseUtils.check_user(cls.user):

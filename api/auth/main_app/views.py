@@ -1,7 +1,6 @@
 import datetime
 from .models import User, OTP
 from .utils import MetaApiViewClass, OTPRecord, ResponseUtils, Security
-from os import getenv
 
 
 class FindUserByMobile(MetaApiViewClass):
@@ -58,14 +57,13 @@ class CreateOtp(MetaApiViewClass):
 
 
 class ConfirmCode(MetaApiViewClass):
-    __confirm_code_try_count_limit = getenv("CONFIRM_CODE_TRY_COUNT_LIMIT")
 
     @MetaApiViewClass.generic_decor
     def post(self, request):
-        params_key = ['confirm_code', 'id']
+        params_key = ['confirm_code', 'user_id', 'confirm_code_try_count_limit']
         params = self.get_params(self.request.data, params_key)
 
-        user = User.objects.get(id=params['id'])
+        user = User.objects.get(id=params['user_id'])
         if ResponseUtils.check_user(user):
             return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
 
@@ -73,7 +71,7 @@ class ConfirmCode(MetaApiViewClass):
 
         if otp.expire < OTPRecord.current_time():
             return self.bad_request(message=['CODE_EXPIRED'])
-        elif otp.try_count >= int(self.__confirm_code_try_count_limit):
+        elif otp.try_count >= int(params['confirm_code_try_count_limit']):
             return self.bad_request(message=['TOO_MANY_REQUESTS'])
 
         otp.try_count += 1
@@ -89,13 +87,13 @@ class ConfirmCode(MetaApiViewClass):
 
         return self.success(message=['CODE_CONFIRMED'], data={'token': token})
 
-# class Verify(MetaApiViewClass):
 
-# @MetaApiViewClass.generic_decor
-# @MetaApiViewClass.check_token(True)
-# def get(self, request):
-#     return self.success(data=self.user)
+class FindUserByToken(MetaApiViewClass):
 
+    @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.check_token(True)
+    def get(self, request):
+        return self.success(data={'user_data': self.user, 'token_data': self.decoded_token})
 
 # class UserProfileUpdate(MetaApiViewClass):
 

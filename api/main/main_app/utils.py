@@ -127,8 +127,10 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest):
                     auth_token_key = cls.__auth_token_key
                     params_key = [auth_token_key]
                     params = cls.get_params(args[1].headers, params_key)
-                    cls.user = cls.get_req('/verify', params=None, return_data=True,
-                                           headers={auth_token_key: params[auth_token_key]})
+                    auth_response = cls.get_req('/find-user-by-token/', params=None, return_data=True,
+                                                headers={auth_token_key: params[auth_token_key]})
+                    cls.token_info = auth_response['token_data']
+                    cls.user = auth_response['user_data']
                     if cls.user is None:
                         return cls.not_found()
                     return func(*args, **kwargs)
