@@ -1,5 +1,5 @@
 import datetime
-from .models import User, OTP
+from .models import User, OTP, City, SalesMan
 from .utils import MetaApiViewClass, OTPRecord, ResponseUtils, Security
 
 
@@ -30,7 +30,7 @@ class FindUserByMobile(MetaApiViewClass):
 
 class CreateOtp(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.generic_decor()
     def post(self, request):
         params_key = ['user_id', 'login_attempt_limit_hour', 'confirm_code_expire_minutes']
         params = self.get_params(self.request.data, params_key)
@@ -58,7 +58,7 @@ class CreateOtp(MetaApiViewClass):
 
 class ConfirmCode(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.generic_decor()
     def post(self, request):
         params_key = ['confirm_code', 'user_id', 'confirm_code_try_count_limit']
         params = self.get_params(self.request.data, params_key)
@@ -90,56 +90,69 @@ class ConfirmCode(MetaApiViewClass):
 
 class FindUserByToken(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.generic_decor()
     @MetaApiViewClass.check_token(True)
     def get(self, request):
         return self.success(data={'user_data': self.user, 'token_data': self.decoded_token})
 
-# class UserProfileUpdate(MetaApiViewClass):
 
-#     @MetaApiViewClass.generic_decor
-#     @MetaApiViewClass.check_token(False)
-#     def put(self, request):
-#         params_key = None
-#         params = self.get_params(self.request.data, params_key, required=False)
-#         for item in params:
-#             if item not in self.user.__dict__:
-#                 return self.bad_request(message=['UNKNOWN_ATTRIBUTE_WAS_GIVEN'])
-#             elif item in self.dangerous_attribute:
-#                 return self.bad_request(message=['RESTRICTED_ATTRIBUTE'])
-#             setattr(self.user, item, params[item])
-#         self.user.save()
-#         return self.success(message=['USER_UPDATED'])
+class UserProfileUpdate(MetaApiViewClass):
+
+    @MetaApiViewClass.generic_decor(True)
+    def put(self, request):
+        params_key = ['nick_name', 'email', 'picture']
+        params = self.get_params(self.request.data, params_key, required=False)
+        for item in params:
+            setattr(self.user, item, params[item])
+        self.user.save()
+        return self.success(message=['USER_UPDATED'])
 
 
-# class DeleteAccount(MetaApiViewClass):
+class DeleteById(MetaApiViewClass):
 
-# @MetaApiViewClass.generic_decor
-# @MetaApiViewClass.check_token(False)
-# def delete(self, request):
-#     self.user.is_deleted = True
-#     self.user.save()
-#     return self.success(message=['USER_DELETED'])
+    @MetaApiViewClass.generic_decor()
+    def delete(self, request, user_id):
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return self.not_found(message=['USER_DOES_NOT_EXIST'])
+        if ResponseUtils.check_user(user):
+            return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+        user.is_deleted = True
+        user.save()
+        return self.success(message=['USER_DELETED'])
 
 
-# class SalesManView(MetaApiViewClass):
+class SalesManView(MetaApiViewClass):
 
-# @MetaApiViewClass.generic_decor
-# @MetaApiViewClass.check_token(False)
-# def post(self, request):
-#     params = self.get_params(self.request.data, [
-#         'store_name', 'city_id', 'address', 'open_time',
-#         'close_time', 'working_days', 'activity_type'
-#     ])
-#
-#     city = City.objects.get(id=params['city_id'])
-#     if not city:
-#         return self.bad_request(message=['INVALID_CITY_ID'])
-#
-#     SalesMan.objects.create(
-#         store_name=params['store_name'], city=city, address=params['address'],
-#         open_time=params['open_time'], close_time=params['close_time'],
-#         working_days=params['working_days'], activity_type=params['activity_type']
-#     ).save()
-#
-#     return self.success(message=['SALESMAN_CREATED'])
+    @MetaApiViewClass.generic_decor(True)
+    def post(self, request):
+        params = self.get_params(self.request.data, [
+            'store_name', 'city_id', 'address', 'open_time',
+            'close_time', 'working_days', 'activity_type',
+        ])
+        try:
+            city = City.objects.get(id=params['city_id'])
+        except City.DoesNotExist:
+            return self.bad_request(message=['INVALID_CITY_ID'])
+
+        SalesMan.objects.create(
+            user=self.user_by_id, store_name=params['store_name'], city=city, address=params['address'],
+            open_time=params['open_time'], close_time=params['close_time'],
+            working_days=params['working_days'], activity_type=params['activity_type'],
+            uid=f'{ResponseUtils.standard_city_code(city.code)}-{self.user_by_id.uid}-{params["job_category"]}'
+        ).save()
+
+        return self.success(message=['SALESMAN_CREATED'])
+
+    @MetaApiViewClass.generic_decor(True)
+    def put(self, request):
+        params_key = ['full_name', 'username', 'store_name', 'telephone', 'city', 'address',
+                      'open_time', 'close_time', 'working_days', 'activity_type', 'is_private']
+        params = self.get_params(self.request.data, params_key, required=False)
+        for item in params:
+            setattr(self.user.salesman, item, params[item])
+        return self.success(message='SLAESMAN_UPDATED')
+
+
+

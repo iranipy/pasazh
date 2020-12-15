@@ -48,6 +48,37 @@ class Verify(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(True)
     def get(self, request):
         return self.success(data={'user': self.user})
+
+
+class DeleteAccount(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor(True)
+    def delete(self, request):
+        self.del_req('/delete-by-id/', self.user['id'])
+
+
+class UpdateUserProfile(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor(True)
+    def put(self, request):
+        params_key = ['nick_name', 'email', 'picture']
+        params = self.get_params(self.request.data, params_key, required=False)
+        self.put_req('/update-profile/', params)
+
+
+class CreateSalesMan(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor(True)
+    def post(self, request):
+        params = self.get_params(self.request.data, [
+            'store_name', 'city_id', 'address', 'open_time',
+            'close_time', 'working_days', 'activity_type'])
+        self.post_req('/create-salesman/', params)
+
+    @MetaApiViewClass.generic_decor(True)
+    def put(self, request):
+        params_key = ['full_name', 'username', 'store_name', 'telephone', 'city', 'address',
+                      'open_time', 'close_time', 'working_days', 'activity_type', 'is_private']
+        params = self.get_params(self.request.data, params_key, required=False)
+        self.post_req('/create-salesman/', params)
+
 # class CategoryManagement(MetaApiViewClass):
 #     @MetaApiViewClass.generic_decor(True)
 #     def get(self, request):

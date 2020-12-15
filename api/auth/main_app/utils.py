@@ -14,7 +14,6 @@ from functools import wraps
 
 
 class Security:
-
     __secret_key = getenv("SECRET_KEY")
 
     @staticmethod
@@ -30,7 +29,7 @@ class Security:
     @classmethod
     def jwt_token_generator(cls, **kwargs):
         kwargs['exp'] = datetime.datetime.utcnow() + \
-            datetime.timedelta(weeks=100)
+                        datetime.timedelta(weeks=100)
         return jwt.encode(kwargs, cls.__secret_key)
 
     @classmethod
@@ -66,9 +65,12 @@ class ResponseUtils:
     def check_user(user):
         return user.get('is_deleted') or not user.get('is_active')
 
+    @staticmethod
+    def standard_city_code(code):
+        return ('0' * (4 - len(code))) + code
+
 
 class CustomResponse:
-
     class CustomResponseException(Exception):
         def __init__(self, state='internal_error', message=None, data=None):
             if message is None:
@@ -128,40 +130,50 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
-
     __auth_token_key = getenv("AUTH_TOKEN_KEY")
-    # __dangerous_attribute = getenv("DANGEROUS_ATTRIBUTE").split(',')
 
     token_info = None
     decoded_token = None
     user = None
+    user_by_id = None
 
     @classmethod
     def get_params(cls, obj_to_check: dict, params_key: list, required=True):
-        if not required:
-            return obj_to_check
         params = {}
         for p in params_key:
             params[p] = obj_to_check.get(p)
-            if params[p] is None:
+            if params[p] is None and required:
                 raise cls.BadRequest([f'{p.upper()}_PARAMETER_IS_REQUIRED'])
         return params
 
     @classmethod
-    def generic_decor(cls, func):
-        def inner(self, request):
-            try:
-                return func(self, request)
-            except cls.NotFound as e:
-                return cls.not_found(message=e.message, data=e.data)
-            except cls.BadRequest as e:
-                return cls.bad_request(message=e.message, data=e.data)
-            except cls.CustomResponseException as e:
-                return cls.general_response(state=e.state, message=e.message, data=e.data)
-            except Exception as e:
-                return cls.internal_error(message=[str(e)])
+    def generic_decor(cls, user_by_id=False):
+        def decorator(func):
+            def inner(self, request):
+                if user_by_id:
+                    params_key = ['user_id']
+                    params = cls.get_params(request.data, params_key)
+                    try:
+                        user = models.User.objects.get(id=params['user_id'])
+                    except models.User.DoesNotExist:
+                        return cls.not_found()
+                    if ResponseUtils.check_user(user):
+                        return cls.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+                    cls.user_by_id = user
+                try:
+                    return func(self, request)
+                except cls.NotFound as e:
+                    return cls.not_found(message=e.message, data=e.data)
+                except cls.BadRequest as e:
+                    return cls.bad_request(message=e.message, data=e.data)
+                except cls.CustomResponseException as e:
+                    return cls.general_response(state=e.state, message=e.message, data=e.data)
+                except Exception as e:
+                    return cls.internal_error(message=[str(e)])
 
-        return inner
+            return inner
+
+        return decorator
 
     @classmethod
     def check_token(cls, serialize: bool):

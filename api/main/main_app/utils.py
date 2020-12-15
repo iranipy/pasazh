@@ -101,6 +101,18 @@ class CustomRequest:
         response = requests.post(cls.__generate_url(url), data, json, **kwargs)
         return cls.__handle_request(response, return_data)
 
+    @classmethod
+    def put_req(cls, url, data=None, return_data=False, json="", **kwargs):
+        if data is None:
+            data = {}
+        response = requests.post(cls.__generate_url(url), data, json, **kwargs)
+        return cls.__handle_request(response, return_data)
+
+    @classmethod
+    def del_req(cls, url, user_id, return_data=False, **kwargs):
+        response = requests.delete(cls.__generate_url(url) + user_id, **kwargs)
+        return cls.__handle_request(response, return_data)
+
 
 class MetaApiViewClass(APIView, CustomResponse, CustomRequest):
     __auth_token_key = getenv("AUTH_TOKEN_KEY")
@@ -110,12 +122,10 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest):
 
     @classmethod
     def get_params(cls, obj_to_check: dict, params_key: list, required=True):
-        if not required:
-            return obj_to_check
         params = {}
         for p in params_key:
             params[p] = obj_to_check.get(p)
-            if params[p] is None:
+            if params[p] is None and required:
                 raise cls.BadRequest([f'{p.upper()}_PARAMETER_IS_REQUIRED'])
         return params
 
