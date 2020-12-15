@@ -12,15 +12,31 @@ class Login(MetaApiViewClass):
         params_key = ['mobile']
         params = self.get_params(self.request.data, params_key)
 
-        user = self.get_req("/find-user-by-mobile/", {
+        self.user = self.get_req("/find-user-by-mobile/", {
             'mobile': params['mobile'],
             'insert': True
         }, True)
 
         self.post_req("/create-otp/", {
-            'user_id': user['id'],
+            'user_id': self.user['id'],
             'login_attempt_limit_hour': self.__login_attempt_limit_hour,
             'confirm_code_expire_minutes': self.__confirm_code_expire_minutes
+        })
+
+
+class ConfirmCode(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor()
+    def post(self, request):
+        params_key = ['confirm_code', 'mobile']
+        params = self.get_params(self.request.data, params_key)
+        self.user = self.get_req("/find-user-by-mobile/", {
+            'mobile': params['mobile'],
+            'insert': False
+        }, True)
+
+        self.post_req('/confirm-code/', {
+            'confirm_code': params['confirm_code'],
+            'id': params['id']
         })
 
 

@@ -1,6 +1,7 @@
 import datetime
 from .models import User, OTP
-from .utils import MetaApiViewClass, OTPRecord, ResponseUtils
+from .utils import MetaApiViewClass, OTPRecord, ResponseUtils, Security
+from os import getenv
 
 
 class FindUserByMobile(MetaApiViewClass):
@@ -53,41 +54,40 @@ class CreateOtp(MetaApiViewClass):
         otp = OTPRecord.create_fields(params['confirm_code_expire_minutes'])
         OTP.objects.create(user=user, **otp).save()
 
-        return self.success(message=['CODE_SENT'])
+        return self.success(message=['CODE_SENT'], data={'code': otp['code']})
 
-# class ConfirmCode(MetaApiViewClass):
 
-# __confirm_code_try_count_limit = getenv("CONFIRM_CODE_TRY_COUNT_LIMIT")
+class ConfirmCode(MetaApiViewClass):
+    __confirm_code_try_count_limit = getenv("CONFIRM_CODE_TRY_COUNT_LIMIT")
 
-# @MetaApiViewClass.generic_decor
-# def post(self, request):
-#     params_key = ['confirm_code', 'mobile']
-#     params = self.get_params(self.request.data, params_key)
-#
-#     user = User.objects.get(mobile=params['mobile'])
-#     if ResponseUtils.check_user(user):
-#         return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
-#
-#     otp = OTP.objects.filter(user=user).order_by('-created_at')[0]
-#
-#     if otp.expire < OTPRecord.current_time():
-#         return self.bad_request(message=['CODE_EXPIRED'])
-#     elif otp.try_count >= int(self.__confirm_code_try_count_limit):
-#         return self.bad_request(message=['TOO_MANY_REQUESTS'])
-#
-#     otp.try_count += 1
-#
-#     if params['confirm_code'] != otp.code:
-#         otp.save()
-#         return self.bad_request(message=['WRONG_CODE'])
-#
-#     otp.expire = 0
-#     otp.save()
-#
-#     token = Security.jwt_token_generator(user_id=user.id)
-#
-#     return self.success(message=['CODE_CONFIRMED'], data={'token': token})
+    @MetaApiViewClass.generic_decor
+    def post(self, request):
+        params_key = ['confirm_code', 'id']
+        params = self.get_params(self.request.data, params_key)
 
+        user = User.objects.get(id=params['id'])
+        if ResponseUtils.check_user(user):
+            return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+
+        otp = OTP.objects.filter(user=user).order_by('-created_at')[0]
+
+        if otp.expire < OTPRecord.current_time():
+            return self.bad_request(message=['CODE_EXPIRED'])
+        elif otp.try_count >= int(self.__confirm_code_try_count_limit):
+            return self.bad_request(message=['TOO_MANY_REQUESTS'])
+
+        otp.try_count += 1
+
+        if params['confirm_code'] != otp.code:
+            otp.save()
+            return self.bad_request(message=['WRONG_CODE'])
+
+        otp.expire = 0
+        otp.save()
+
+        token = Security.jwt_token_generator(user_id=user.id)
+
+        return self.success(message=['CODE_CONFIRMED'], data={'token': token})
 
 # class Verify(MetaApiViewClass):
 
