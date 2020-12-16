@@ -5,7 +5,7 @@ from .utils import MetaApiViewClass, OTPRecord, ResponseUtils, Security
 
 class FindUserByMobile(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.generic_decor()
     def get(self, request):
         params_key = ['mobile', 'insert']
         params = self.get_params(self.request.query_params, params_key)
@@ -153,6 +153,3 @@ class SalesManView(MetaApiViewClass):
         for item in params:
             setattr(self.user.salesman, item, params[item])
         return self.success(message='SLAESMAN_UPDATED')
-
-
-
