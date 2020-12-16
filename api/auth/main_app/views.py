@@ -6,7 +6,7 @@ from .serializers import UserSerializer
 
 class FindUserByMobile(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor
+    @MetaApiViewClass.generic_decor()
     def get(self, request):
         params_key = ['mobile', 'insert']
         params = self.get_params(self.request.query_params, params_key)
