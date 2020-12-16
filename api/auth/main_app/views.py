@@ -1,6 +1,7 @@
 import datetime
 from .models import User, OTP, City, SalesMan
 from .utils import MetaApiViewClass, OTPRecord, ResponseUtils, Security
+from .serializers import UserSerializer
 
 
 class FindUserByMobile(MetaApiViewClass):
@@ -27,6 +28,20 @@ class FindUserByMobile(MetaApiViewClass):
 
         return self.success(data=user)
 
+
+##################################################################
+
+
+class LoginTWO(MetaApiViewClass):
+    def post(self, request):
+        user = UserSerializer(data=self.request.data)
+        if user.is_valid():
+            user.save()
+            return self.success()
+        return self.bad_request(data={'error': user.errors})
+
+
+##################################################################
 
 class CreateOtp(MetaApiViewClass):
 
@@ -153,6 +168,3 @@ class SalesManView(MetaApiViewClass):
         for item in params:
             setattr(self.user.salesman, item, params[item])
         return self.success(message='SLAESMAN_UPDATED')
-
-
-
