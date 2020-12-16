@@ -20,11 +20,12 @@ def main():
             "forget to activate a virtual environment?"
         ) from exc
 
-    host_port = f"{getenv('HOST')}:{getenv('PORT')}"
-    try:
-        sys.argv[2] = host_port
-    except IndexError:
-        sys.argv.append(host_port)
+    if sys.argv[1] == 'runserver':
+        host_port = f"{getenv('HOST')}:{getenv('PORT')}"
+        try:
+            sys.argv.index(host_port)
+        except ValueError:
+            sys.argv.append(host_port)
 
     execute_from_command_line(sys.argv)
 
