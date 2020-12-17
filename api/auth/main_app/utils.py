@@ -66,7 +66,7 @@ class ResponseUtils:
         return user.get('is_deleted') or not user.get('is_active')
 
     @staticmethod
-    def standard_city_code(code):
+    def standard_four_digits(code):
         return ('0' * (4 - len(code))) + code
 
 
@@ -153,13 +153,17 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
                 if user_by_id:
                     params_key = ['user_id']
                     params = cls.get_params(request.data, params_key)
+
                     try:
                         user = models.User.objects.get(id=params['user_id'])
                     except models.User.DoesNotExist:
                         return cls.not_found()
+
                     if ResponseUtils.check_user(user):
                         return cls.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+
                     cls.user_by_id = user
+
                 try:
                     return func(self, request)
                 except cls.NotFound as e:

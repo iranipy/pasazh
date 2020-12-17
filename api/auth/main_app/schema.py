@@ -5,36 +5,30 @@ from functools import wraps
 class JsonValidation:
     _valid_data = None
     VALIDATOR = {
-        "find-user-by-mobile":
-            {
-                "type": "object",
-                "properties": {
-                    "mobile": {"type": "string",
-                               "maxLength": 10,
-                               },
-                    "insert": {"type": "boolean"}
-                },
-                "additionalProperties": False,
-                "required": ["mobile", "insert"]
+        "find-user-by-mobile": {
+            "type": "object",
+            "properties": {
+                "mobile": {"type": "string", "maxLength": 10},
+                "insert": {"type": "boolean"}
             },
-        "create-otp":
-            {
-                "type": "object",
-                "properties": {
-                    "user_id": {"type": "integer"},
-                    "login_attempt_limit_hour": {"type": "integer"},
-                    "confirm_code_expire_minutes": {"type": "integer"}
-                },
-                "additionalProperties": False,
-                "required": ["user_id", "login_attempt_limit_hour", "confirm_code_expire_minutes"]
+            "additionalProperties": False,
+            "required": ["mobile", "insert"]
+        },
+        "create-otp": {
+            "type": "object",
+            "properties": {
+                "user_id": {"type": "integer"},
+                "login_attempt_limit_hour": {"type": "integer"},
+                "confirm_code_expire_minutes": {"type": "integer"}
             },
-
+            "additionalProperties:q"
+            ":q": False,
+            "required": ["user_id", "login_attempt_limit_hour", "confirm_code_expire_minutes"]
+        },
         "confirm-code": {
             "type": "object",
             "properties": {
-                "confirm_code": {"type": "string",
-                                 "minLength": 6,
-                                 "maxLength": 6},
+                "confirm_code": {"type": "string", "minLength": 6, "maxLength": 6},
                 "user_id": {"type": "integer"},
                 "confirm_code_try_count_limit": {"type": "integer"}
             },
@@ -44,40 +38,27 @@ class JsonValidation:
         "update-profile": {
             "type": "object",
             "properties": {
-                "nick_name": {"type": "string",
-                              "minLength": 1,
-                              "maxLength": 50},
-                "email": {"type": "integer",
-                          "format": "email"},
+                "nick_name": {"type": "string", "minLength": 1, "maxLength": 50},
+                "email": {"type": "integer", "format": "email"},
                 "picture": {"type": "string"}
             },
-            "additionalProperties": False,
+            "additionalProperties": False
         },
         "create-salesman": {
             "type": "object",
             "properties": {
-                "store_name": {"type": "string",
-                               "maxLength": 50},
+                "store_name": {"type": "string", "maxLength": 50},
                 "city_id": {"type": "integer"},
-                "address": {"type": "string",
-                            "maxLength": 200},
-                "open_time": {"type": "string",
-                              "format": "date-time"},
-                "close_time": {"type": "string",
-                               "format": "date-time"},
-                "working_days": {"type": "string",
-                                 "maxLength": 27},
-                "activity_type": {"type": "string",
-                                  "maxLength": 3,
-                                  "enum": ["ON", "OFF", "ALL"]},
+                "job_category_id": {"type": "integer"},
+                "address": {"type": "string", "maxLength": 200},
+                "open_time": {"type": "string", "format": "date-time"},
+                "close_time": {"type": "string", "format": "date-time"},
+                "working_days": {"type": "string", "maxLength": 27},
+                "activity_type": {"type": "string", "maxLength": 3, "enum": ["ON", "OFF", "ALL"]},
                 "is_private": {"type": "boolean"},
-                "username": {"type": "string",
-                             "minLength": 5,
-                             "maxLength": 20},
-                "full_name": {"type": "string",
-                              "maxLength": 50},
-                "telephone": {"type": "string",
-                              "maxLength": 20},
+                "username": {"type": "string", "minLength": 5, "maxLength": 20},
+                "full_name": {"type": "string", "maxLength": 50},
+                "telephone": {"type": "string", "maxLength": 20},
             },
             "additionalProperties": False,
             "required": ["city_id", "address", "open_time", "close_time", "activity_type"]
@@ -85,30 +66,18 @@ class JsonValidation:
         "update_sales_man": {
             "type": "object",
             "properties": {
-                "store_name": {"type": "string",
-                               "maxLength": 50},
-                "username": {"type": "string",
-                             "minLength": 5,
-                             "maxLength": 20},
-                "full_name": {"type": "string",
-                              "maxLength": 50},
-                "telephone": {"type": "string",
-                              "maxLength": 20},
-                "address": {"type": "string",
-                            "maxLength": 200},
+                "store_name": {"type": "string", "maxLength": 50},
+                "username": {"type": "string", "minLength": 5, "maxLength": 20},
+                "full_name": {"type": "string", "maxLength": 50},
+                "telephone": {"type": "string", "maxLength": 20},
+                "address": {"type": "string", "maxLength": 200},
                 "city_id": {"type": "integer"},
-                "open_time": {"type": "string",
-                              "format": "date-time"},
-                "close_time": {"type": "string",
-                               "format": "date-time"},
-                "working_days": {"type": "string",
-                                 "maxLength": 27},
-                "activity_type": {"type": "string",
-                                  "maxLength": 3,
-                                  "enum": ["ON", "OFF", "ALL"]},
-
+                "open_time": {"type": "string", "format": "date-time"},
+                "close_time": {"type": "string", "format": "date-time"},
+                "working_days": {"type": "string", "maxLength": 27},
+                "activity_type": {"type": "string", "maxLength": 3, "enum": ["ON", "OFF", "ALL"]},
             },
-            "additionalProperties": False,
+            "additionalProperties": False
         }
     }
 

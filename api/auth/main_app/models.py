@@ -4,6 +4,15 @@ from django.core.validators import validate_image_file_extension
 import main_app.utils as utils
 
 
+def decimal_uid_generator():
+    try:
+        job_category = JobCategory.objects.order_by('-created_at')[0]
+        uid = utils.ResponseUtils.standard_four_digits(int(job_category.uid) + 1)
+    except IndexError:
+        uid = utils.ResponseUtils.standard_four_digits('1')
+    return uid
+
+
 def uid_generator():
     uid = utils.Security.hex_generator()
     while User.objects.filter(uid=uid).exists():
@@ -40,6 +49,11 @@ class City(AbstractModel):
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
 
 
+class JobCategory(AbstractModel):
+    uid = models.CharField(max_length=4, unique=True, default=decimal_uid_generator)
+    name = models.CharField(max_length=50, unique=True, default='')
+
+
 class User(AbstractModel):
     uid = models.CharField(max_length=8, unique=True, default=uid_generator)
     mobile = models.CharField(max_length=13, unique=True)
@@ -60,6 +74,7 @@ class SalesMan(AbstractModel):
         ('ALL', 'All')
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    job_category = models.ForeignKey(JobCategory, on_delete=models.RESTRICT)
     uid = models.CharField(max_length=16, unique=True, null=True, blank=True)
     full_name = models.CharField(max_length=50, null=True, blank=True)
     username = models.CharField(max_length=20, null=True, blank=True, unique=True)

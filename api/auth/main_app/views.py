@@ -1,5 +1,5 @@
 import datetime
-from .models import User, OTP, City, SalesMan
+from .models import User, OTP, City, SalesMan, JobCategory
 from .utils import MetaApiViewClass, OTPRecord, ResponseUtils, Security
 from .schema import JsonValidation
 
@@ -127,16 +127,22 @@ class SalesManView(MetaApiViewClass):
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
+
         try:
             city = City.objects.get(id=data['city_id'])
         except City.DoesNotExist:
             return self.bad_request(message=['INVALID_CITY_ID'])
 
+        try:
+            job_category = JobCategory.objects.get(id=data['job_category_id'])
+        except City.DoesNotExist:
+            return self.bad_request(message=['INVALID_JOB_CATEGORY_ID'])
+
         SalesMan.objects.create(
             user=self.user_by_id, store_name=data['store_name'], city=city, address=data['address'],
             open_time=data['open_time'], close_time=data['close_time'],
             working_days=data['working_days'], activity_type=data['activity_type'],
-            uid=f'{ResponseUtils.standard_city_code(city.code)}-{self.user_by_id.uid}-{data["job_category"]}'
+            uid=f'{ResponseUtils.standard_four_digits(city.code)}-{self.user_by_id.uid}-{job_category.uid}'
         ).save()
 
         return self.success(message=['SALESMAN_CREATED'])
