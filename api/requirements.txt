@@ -7,3 +7,4 @@ pytz==2020.4
 sqlparse==0.4.1
 python-dotenv==0.15.0
 requests==2.25.0
+fastjsonschema==2.14.5
