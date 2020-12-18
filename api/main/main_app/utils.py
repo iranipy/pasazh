@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
 from django.forms import model_to_dict
+from random import randint
 
 
 class ResponseUtils:
@@ -11,6 +12,13 @@ class ResponseUtils:
     @staticmethod
     def serialize(instance):
         return model_to_dict(instance)
+
+    @staticmethod
+    def rand_digit \
+                    (length: int):
+        _min = int(pow(10, length - 1))
+        _max = int(pow(10, length) - 1)
+        return str(randint(_min, _max))
 
 
 class CustomResponse:

@@ -106,7 +106,7 @@ class UserProfileUpdate(MetaApiViewClass):
         return self.success(message=['USER_UPDATED'])
 
 
-class DeleteById(MetaApiViewClass):
+class DeleteAccountById(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor()
     def delete(self, request, user_id):

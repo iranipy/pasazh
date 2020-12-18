@@ -4,35 +4,22 @@ from functools import wraps
 
 class JsonValidation:
     VALIDATOR = {
-        "find-user-by-mobile": {
+        "login": {
             "type": "object",
             "properties": {
                 "mobile": {"type": "string", "maxLength": 10},
-                "insert": {"type": "boolean"}
             },
             "additionalProperties": False,
-            "required": ["mobile", "insert"]
-        },
-        "create-otp": {
-            "type": "object",
-            "properties": {
-                "user_id": {"type": "integer"},
-                "login_attempt_limit_hour": {"type": "integer"},
-                "confirm_code_expire_minutes": {"type": "integer"}
-            },
-            "additionalProperties:q"
-            ":q": False,
-            "required": ["user_id", "login_attempt_limit_hour", "confirm_code_expire_minutes"]
+            "required": ["mobile"]
         },
         "confirm-code": {
             "type": "object",
             "properties": {
-                "confirm_code": {"type": "string", "minLength": 6, "maxLength": 6},
-                "user_id": {"type": "integer"},
-                "confirm_code_try_count_limit": {"type": "integer"}
+                "mobile": {"type": "string", "maxLength": 10},
+                "confirm_code": {"type": "string", "maxLength": 6},
             },
             "additionalProperties": False,
-            "required": ["confirm_code", "user_id", "confirm_code_try_count_limit"]
+            "required": ["mobile"]
         },
         "update-profile": {
             "type": "object",
@@ -62,7 +49,7 @@ class JsonValidation:
             "additionalProperties": False,
             "required": ["city_id", "address", "open_time", "close_time", "activity_type"]
         },
-        "update_sales_man": {
+        "update-sales-man": {
             "type": "object",
             "properties": {
                 "store_name": {"type": "string", "maxLength": 50},
@@ -78,6 +65,7 @@ class JsonValidation:
             },
             "additionalProperties": False
         }
+
     }
 
     @classmethod
