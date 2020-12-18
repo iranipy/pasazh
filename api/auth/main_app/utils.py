@@ -2,6 +2,7 @@ import time
 import jwt
 import datetime
 import main_app.models as models
+import isodate
 from os import getenv
 from random import randint
 from math import pow
@@ -63,11 +64,23 @@ class ResponseUtils:
 
     @staticmethod
     def check_user(user):
-        return user.get('is_deleted') or not user.get('is_active')
+        return user.is_deleted or not user.is_active
 
     @staticmethod
     def standard_four_digits(code):
         return ('0' * (4 - len(code))) + code
+
+    @staticmethod
+    def iso_date_parser(iso_time, part) -> datetime:
+        if part == 'date_time':
+            dt = isodate.parse_datetime(iso_time)
+        elif part == 'date':
+            dt = isodate.parse_datetime(iso_time).date()
+        elif part == 'time':
+            dt = isodate.parse_datetime(iso_time).time()
+        else:
+            dt = None
+        return dt
 
 
 class CustomResponse:
@@ -149,13 +162,10 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
     @classmethod
     def generic_decor(cls, user_by_id=False):
         def decorator(func):
-            def inner(self, request):
+            def inner(*args, **kwargs):
                 if user_by_id:
-                    params_key = ['user_id']
-                    params = cls.get_params(request.data, params_key)
-
                     try:
-                        user = models.User.objects.get(id=params['user_id'])
+                        user = models.User.objects.get(id=args[1].data['user_id'])
                     except models.User.DoesNotExist:
                         return cls.not_found()
 
@@ -165,7 +175,7 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
                     cls.user_by_id = user
 
                 try:
-                    return func(self, request)
+                    return func(*args, **kwargs)
                 except cls.NotFound as e:
                     return cls.not_found(message=e.message, data=e.data)
                 except cls.BadRequest as e:
@@ -196,7 +206,7 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
                 cls.token_info = models.User.objects.get(id=cls.decoded_token['user_id'])
                 if serialize:
                     cls.user = ResponseUtils.serialize(cls.token_info)
-                    if ResponseUtils.check_user(cls.user):
+                    if ResponseUtils.check_user(cls.token_info):
                         return cls.bad_request(message=['DELETED/BANNED_ACCOUNT'])
 
                 return f(*args, **kwargs)
@@ -204,3 +214,5 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
             return wrapper
 
         return decorator
+
+

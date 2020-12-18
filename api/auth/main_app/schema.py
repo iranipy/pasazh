@@ -5,84 +5,104 @@ from functools import wraps
 class JsonValidation:
     VALIDATOR = {
         "find-user-by-mobile": {
-            "type": "object",
-            "properties": {
-                "mobile": {"type": "string", "maxLength": 10},
-                "insert": {"type": "boolean"}
-            },
-            "additionalProperties": False,
-            "required": ["mobile", "insert"]
+            "GET": {
+                "type": "object",
+                "properties": {
+                    "mobile": {"type": "string", "maxLength": 10},
+                    "insert": {"type": "boolean"}
+                },
+                "additionalProperties": False,
+                "required": ["mobile", "insert"]
+            }
         },
         "create-otp": {
-            "type": "object",
-            "properties": {
-                "user_id": {"type": "integer"},
-                "login_attempt_limit_hour": {"type": "integer"},
-                "confirm_code_expire_minutes": {"type": "integer"}
-            },
-            "additionalProperties:q"
-            ":q": False,
-            "required": ["user_id", "login_attempt_limit_hour", "confirm_code_expire_minutes"]
+            "POST": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer"},
+                    "login_attempt_limit_hour": {"type": "integer"},
+                    "confirm_code_expire_minutes": {"type": "integer"}
+                },
+                "additionalProperties:q"
+                ":q": False,
+                "required": ["user_id", "login_attempt_limit_hour", "confirm_code_expire_minutes"]
+            }
         },
         "confirm-code": {
-            "type": "object",
-            "properties": {
-                "confirm_code": {"type": "string", "minLength": 6, "maxLength": 6},
-                "user_id": {"type": "integer"},
-                "confirm_code_try_count_limit": {"type": "integer"}
-            },
-            "additionalProperties": False,
-            "required": ["confirm_code", "user_id", "confirm_code_try_count_limit"]
+            "POST": {
+                "type": "object",
+                "properties": {
+                    "confirm_code": {"type": "string", "minLength": 6, "maxLength": 6},
+                    "user_id": {"type": "integer"},
+                    "confirm_code_try_count_limit": {"type": "integer"}
+                },
+                "additionalProperties": False,
+                "required": ["confirm_code", "user_id", "confirm_code_try_count_limit"]
+            }
         },
         "update-profile": {
-            "type": "object",
-            "properties": {
-                "nick_name": {"type": "string", "minLength": 1, "maxLength": 50},
-                "email": {"type": "integer", "format": "email"},
-                "picture": {"type": "string"}
-            },
-            "additionalProperties": False
+            "PUT": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer"},
+                    "nick_name": {"type": "string", "minLength": 1, "maxLength": 50},
+                    "email": {"type": "integer", "format": "email"},
+                    "picture": {"type": "string"}
+                },
+                "additionalProperties": False,
+                "required": ["user_id"]
+            }
         },
-        "create-salesman": {
-            "type": "object",
-            "properties": {
-                "store_name": {"type": "string", "maxLength": 50},
-                "city_id": {"type": "integer"},
-                "job_category_id": {"type": "integer"},
-                "address": {"type": "string", "maxLength": 200},
-                "open_time": {"type": "string", "format": "date-time"},
-                "close_time": {"type": "string", "format": "date-time"},
-                "working_days": {"type": "string", "maxLength": 27},
-                "activity_type": {"type": "string", "maxLength": 3, "enum": ["ON", "OFF", "ALL"]},
-                "is_private": {"type": "boolean"},
-                "username": {"type": "string", "minLength": 5, "maxLength": 20},
-                "full_name": {"type": "string", "maxLength": 50},
-                "telephone": {"type": "string", "maxLength": 20},
+        "salesman-profile": {
+            'POST': {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer"},
+                    "store_name": {"type": "string", "maxLength": 50},
+                    "city_id": {"type": "integer"},
+                    "job_category_id": {"type": "integer"},
+                    "job_category_description": {"type:": "string", "maxLength": 50},
+                    "address": {"type": "string", "maxLength": 200},
+                    "open_time": {"type": "string", "format": "date-time"},
+                    "close_time": {"type": "string", "format": "date-time"},
+                    "working_days": {"type": "string", "maxLength": 27},
+                    "activity_type": {"type": "string", "maxLength": 3, "enum": ["ON", "OFF", "ALL"]},
+                    "is_private": {"type": "boolean"},
+                    "username": {"type": "string", "minLength": 5, "maxLength": 20},
+                    "full_name": {"type": "string", "maxLength": 50},
+                    "telephone": {"type": "string", "maxLength": 20},
+                },
+                "additionalProperties": False,
+                "required": ["user_id", "store_name", "job_category_id", "city_id",
+                             "address", "open_time", "close_time", "activity_type",
+                             "working_days"]
             },
-            "additionalProperties": False,
-            "required": ["city_id", "address", "open_time", "close_time", "activity_type"]
-        },
-        "update_sales_man": {
-            "type": "object",
-            "properties": {
-                "store_name": {"type": "string", "maxLength": 50},
-                "username": {"type": "string", "minLength": 5, "maxLength": 20},
-                "full_name": {"type": "string", "maxLength": 50},
-                "telephone": {"type": "string", "maxLength": 20},
-                "address": {"type": "string", "maxLength": 200},
-                "city_id": {"type": "integer"},
-                "open_time": {"type": "string", "format": "date-time"},
-                "close_time": {"type": "string", "format": "date-time"},
-                "working_days": {"type": "string", "maxLength": 27},
-                "activity_type": {"type": "string", "maxLength": 3, "enum": ["ON", "OFF", "ALL"]},
-            },
-            "additionalProperties": False
+            "PUT": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer"},
+                    "store_name": {"type": "string", "maxLength": 50},
+                    "job_category_id": {"type": "integer"},
+                    "job_category_description": {"type:": "string", "maxLength": 50},
+                    "username": {"type": "string", "minLength": 5, "maxLength": 20},
+                    "full_name": {"type": "string", "maxLength": 50},
+                    "telephone": {"type": "string", "maxLength": 20},
+                    "address": {"type": "string", "maxLength": 200},
+                    "city_id": {"type": "integer"},
+                    "open_time": {"type": "string", "format": "date-time"},
+                    "close_time": {"type": "string", "format": "date-time"},
+                    "working_days": {"type": "string", "maxLength": 27},
+                    "activity_type": {"type": "string", "maxLength": 3, "enum": ["ON", "OFF", "ALL"]},
+                },
+                "additionalProperties": False,
+                "required": ["user_id"]
+            }
         }
     }
 
     @classmethod
-    def proper_schema(cls, url):
-        return cls.VALIDATOR.get(url)
+    def proper_schema(cls, url, method):
+        return cls.VALIDATOR.get(url).get(method)
 
     @classmethod
     def validate(cls, f):
@@ -90,7 +110,7 @@ class JsonValidation:
 
         def decorator(*args, **kwargs):
             request = args[1]
-            schema = cls.proper_schema(request.path_info.replace('/', ''))
+            schema = cls.proper_schema(request.path_info.replace('/', ''), request.method)
             validate = fastjsonschema.compile(schema)
             if validate(request.data):
                 pass

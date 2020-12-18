@@ -10,20 +10,19 @@ class FindUserByMobile(MetaApiViewClass):
     @JsonValidation.validate
     def get(self, request):
         data = self.request.data
+        mobile_number = '+98' + data['mobile']
         try:
-            user = User.objects.get(mobile=data['mobile'])
+            user = User.objects.get(mobile=mobile_number)
         except User.DoesNotExist:
             if not data['insert']:
                 return self.not_found(message=['USER_NOT_FOUND'])
-
-            new_user = User.objects.create(mobile=data['mobile'])
+            new_user = User.objects.create(mobile=mobile_number)
             new_user.save()
             user = User.objects.get(id=new_user.id)
 
-        user = self.serialize(user)
-
         if ResponseUtils.check_user(user):
             return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+        user = self.serialize(user)
 
         return self.success(data=user)
 
@@ -101,17 +100,19 @@ class UserProfileUpdate(MetaApiViewClass):
     def put(self, request):
         data = self.request.data
         for item in data:
-            setattr(self.user, item, data[item])
-        self.user.save()
+            if item == 'user_id':
+                continue
+            setattr(self.user_by_id, item, data[item])
+        self.user_by_id.save()
         return self.success(message=['USER_UPDATED'])
 
 
 class DeleteAccountById(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor()
-    def delete(self, request, user_id):
+    def delete(self, request):
         try:
-            user = User.objects.get(id=user_id)
+            user = User.objects.get(id=self.request.query_params.get('user_id'))
         except User.DoesNotExist:
             return self.not_found(message=['USER_DOES_NOT_EXIST'])
         if ResponseUtils.check_user(user):
@@ -135,23 +136,32 @@ class SalesManView(MetaApiViewClass):
 
         try:
             job_category = JobCategory.objects.get(id=data['job_category_id'])
-        except City.DoesNotExist:
+        except JobCategory.DoesNotExist:
             return self.bad_request(message=['INVALID_JOB_CATEGORY_ID'])
-
+        open_time = ResponseUtils.iso_date_parser(data['open_time'], 'time')
+        close_time = ResponseUtils.iso_date_parser(data['close_time'], 'time')
         SalesMan.objects.create(
-            user=self.user_by_id, store_name=data['store_name'], city=city, address=data['address'],
-            open_time=data['open_time'], close_time=data['close_time'],
+            user=self.user_by_id, store_name=data['store_name'], job_category=job_category,
+            city=city, address=data['address'], open_time=open_time, close_time=close_time,
             working_days=data['working_days'], activity_type=data['activity_type'],
             uid=f'{ResponseUtils.standard_four_digits(city.code)}-{self.user_by_id.uid}-{job_category.uid}'
         ).save()
 
         return self.success(message=['SALESMAN_CREATED'])
 
+    @MetaApiViewClass.generic_decor(True)
+    @JsonValidation.validate
+    def put(self, request):
+        data = self.request.data
+        print(data)
+        salesman = SalesMan.objects.filter(user=self.user_by_id)[0]
+        self.request.data['open_time'] = ResponseUtils.iso_date_parser(data['open_time'], 'time')
+        self.request.data['close_time'] = ResponseUtils.iso_date_parser(data['close_time'], 'time')
+        for item in data:
+            if item == 'user_id':
+                continue
+            setattr(salesman, item, data[item])
+        salesman.save()
+        return self.success(message=['SALESMAN_UPDATED'])
 
-# class UpdateSalesMan(MetaApiViewClass):
-#     @MetaApiViewClass.generic_decor(True)
-#     def put(self, request):
-#         data = self.request.data
-#         for item in data:
-#             setattr(self.user.salesman, item, data[item])
-#         return self.success(message='SALESMAN_UPDATED')
+
