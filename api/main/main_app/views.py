@@ -51,120 +51,125 @@ class Verify(MetaApiViewClass):
 class DeleteAccount(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(True)
     def delete(self, request):
-        self.del_req('/delete-by-id/', self.user['id'])
+        params = {"user_id": self.user['id']}
+        self.del_req('/delete-account-by-id/', params=params)
 
 
 class UpdateUserProfile(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(True)
     @JsonValidation.validate
     def put(self, request):
+        self.request.data['user_id'] = self.user['id']
         self.put_req('/update-profile/', dict(**self.request.data))
 
 
-class CreateSalesMan(MetaApiViewClass):
+class SalesManView(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(True)
     @JsonValidation.validate
     def post(self, request):
-        self.post_req('/create-salesman/', dict(**self.request.data))
+        self.request.data['user_id'] = self.user['id']
+        self.post_req('/salesman-profile/', dict(**self.request.data))
 
-
-class UpdateSalesManProfile(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(True)
     @JsonValidation.validate
     def put(self, request):
-        self.post_req('/create-salesman/', dict(**self.request.data))
+        self.request.data['user_id'] = self.user['id']
+        self.put_req('/salesman-profile/', dict(**self.request.data))
 
 
 class CategoryManagement(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(True)
     def get(self, request):
-        params_key = ['category_id']
-        params = self.get_params(self.request.data, params_key)
-        category = Category.objects.get(id=params['category_id']).values()
-        if category.is_public == False:
-            if self.user['uid'] != category.user_uid:
-                return self.bad_request(message=['FORBIDDEN'])
-            return self.success(data={'categories': category})
-        return self.success(data={'categories': category})
+
+        category = Category.objects.get(id=self.request.query_params['category_id']).values()
+        if category.is_public:
+            return self.success(data={'category': category})
+        if self.user['uid'] != category.user_uid:
+            return self.bad_request(message=['FORBIDDEN'])
 
     @MetaApiViewClass.generic_decor(True)
     def post(self, request):
-        params_key = ['name']
-        params = self.get_params(self.request.data, params_key)
-        params['user_uid'] = self.user['uid']
-        Category.objects.create(**params).save()
+        data = self.request.data
+        data['user_uid'] = self.user['uid']
+        Category.objects.create(**data).save()
         return self.success(message=['CATEGORY_CREATED'])
 
     @MetaApiViewClass.generic_decor(True)
     def put(self):
-        params_key = ['category_id', 'name', 'is_public']
-        params = self.get_params(self.request.data, params_key)
+        data = self.request.data
         try:
-            category = Category.objects.get(id=params['category_id'])
+            category = Category.objects.get(id=data['category_id'])
         except Category.DoesNotExist:
             return self.not_found()
-        if self.user['uid'] != category.uid:
+        if self.user['uid'] != category.user_uid:
             return self.bad_request(message=['FORBIDDEN'])
-        for param in params:
-            setattr(category, params, params[param])
+        for item in data:
+            if item == 'category_id':
+                continue
+            setattr(category, data, data[item])
         return self.success(message=['CATEGORY_UPDATED'])
 
     @MetaApiViewClass.generic_decor(True)
     def delete(self, request):
-        params_key = ['category_id']
-        params = self.get_params(self.request.data, params_key)
+        data = self.request.query_params
         try:
-            category = Category.objects.get(id=params['category_id'])
+            category = Category.objects.get(id=data['category_id'])
         except Category.DoesNotExist:
             return self.not_found()
-        if self.user['uid'] != category.uid:
+        if self.user['uid'] != category.user_uid:
             return self.bad_request(message=['FORBIDDEN'])
         category.delete()
-        return self.success()
+        return self.success(message=['CATEGORY_DELETED'])
 
 
 class ProductManagement(MetaApiViewClass):
     @MetaApiViewClass.generic_decor()
     def get(self):
-        params_key = ['product_id']
-        params = self.get_params(self.request.data, params_key)
+        data = self.request.query_params
         try:
-            product = Product.objects.get(id=params['product_id'])
+            product = Product.objects.get(id=data['product_id'])
         except Product.DoesNotExist:
             return self.not_found()
         return self.success(data={'product': ResponseUtils.serialize(product)})
 
     @MetaApiViewClass.generic_decor(True)
     def post(self, request):
-        params_key = ['name', 'count', 'description', 'price', 'category_id']
-        params = self.get_params(self.request.data, params_key)
-        category = Category.objects.get(id=params['category_id'])
-        params.pop('category_id')
-        params['category'] = category
-        params['uid'] = f"{self.user['uid'] - {category.uid} - ResponseUtils.rand_digit(6)}"
-        Product.objects.create(**params).save()
+        data = self.request.data
+        try:
+            category = Category.objects.get(id=data['category_id'])
+        except Category.DoesNotExist:
+            return self.bad_request(message=["INVALID_CATEGORY"])
+        data.pop('category_id')
+        data['category'] = category
+        data['uid'] = f"{self.user['uid']}-{category.uid}-{ResponseUtils.rand_digit(6)}"
+        Product.objects.create(**data).save()
         return self.success(message=['PRODUCT_CREATED'])
 
     @MetaApiViewClass.generic_decor(True)
     def put(self, request):
-        params_key = ['product_id']
-        params = self.get_params(self.request.data, params_key)
+        data = self.request.data
         try:
-            product = Product.objects.get(id=params['product_id'])
+            product = Product.objects.get(id=data['product_id'])
         except Product.DoesNotExist:
             return self.not_found()
         if self.user['uid'] != product.uid.split('-')[0]:
             return self.bad_request(message=['FORBIDDEN'])
-        for p in params:
-            setattr(product, p, params[p])
+        category = Category.objects.get(id=data['category_id'])
+        data.pop('category_id')
+        data['category'] = category
+        for item in data:
+            setattr(product, item, data[item])
 
         product.save()
+        return self.success(message=['PRODUCT_UPDATED'])
 
     @MetaApiViewClass.generic_decor(True)
     def delete(self, request):
-        params_key = ['product_id']
-        params = self.get_params(self.request.data, params_key)
-        product = Product.objects.get(id=params['product_id'])
+        data = self.request.query_params
+        try:
+            product = Product.objects.get(id=data['product_id'])
+        except Product.DoesNotExist:
+            return self.not_found(message=['PRODUCT_NOT_FOUND'])
         if self.user['uid'] != product.uid.split('-')[0]:
             return self.bad_request(message=['FORBIDDEN'])
         product.delete()

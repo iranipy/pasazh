@@ -1,6 +1,6 @@
 from django.urls import re_path
 from .views import (Login, ConfirmCode, Verify, UpdateUserProfile, DeleteAccount,
-                    CreateSalesMan, UpdateSalesManProfile, ProductManagement, CategoryManagement)
+                    SalesManView, ProductManagement, CategoryManagement)
 
 urlpatterns = [
     re_path(r'^login/?$', Login.as_view(), name='login'),
@@ -8,8 +8,7 @@ urlpatterns = [
     re_path(r'^Verify/?$', Verify.as_view(), name='Verify'),
     re_path(r'^update-profile/?$', UpdateUserProfile.as_view(), name='update-profile'),
     re_path(r'^delete-account/?$', DeleteAccount.as_view(), name='delete-account'),
-    re_path(r'^create-salesman/?$', CreateSalesMan.as_view(), name='salesman'),
-    re_path(r'^update-salesman/?$', UpdateSalesManProfile.as_view(), name='salesman'),
+    re_path(r'^salesman-view/?$', SalesManView.as_view(), name='salesman'),
     re_path(r'^product/?$', ProductManagement.as_view(), name='product'),
     re_path(r'^category/?$', CategoryManagement.as_view(), name='category')
 

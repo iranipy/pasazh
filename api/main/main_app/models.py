@@ -32,11 +32,11 @@ class Category(AbstractModel):
 
 
 class Product(AbstractModel):
-    uid = models.CharField(max_length=18)
-    name = models.CharField(max_length=50)
-    count = models.IntegerField()
+    uid = models.CharField(max_length=20)
+    name = models.CharField(max_length=80)
+    quantity = models.IntegerField()
     description = models.TextField(max_length=1000)
-    price = models.FloatField()
+    price = models.BigIntegerField()
     rate = models.FloatField(null=True, blank=True)
     rate_count = models.IntegerField(null=True, blank=True)
     view_count = models.IntegerField(default=1)

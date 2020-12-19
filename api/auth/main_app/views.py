@@ -9,7 +9,7 @@ class FindUserByMobile(MetaApiViewClass):
     @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def get(self, request):
-        data = self.request.data
+        data = self.request.query_params
         mobile_number = '+98' + data['mobile']
         try:
             user = User.objects.get(mobile=mobile_number)
@@ -153,7 +153,6 @@ class SalesManView(MetaApiViewClass):
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data
-        print(data)
         salesman = SalesMan.objects.filter(user=self.user_by_id)[0]
         self.request.data['open_time'] = ResponseUtils.iso_date_parser(data['open_time'], 'time')
         self.request.data['close_time'] = ResponseUtils.iso_date_parser(data['close_time'], 'time')

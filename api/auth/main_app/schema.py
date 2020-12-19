@@ -53,6 +53,16 @@ class JsonValidation:
                 "required": ["user_id"]
             }
         },
+        "delete-account-by-id": {
+            "DELETE": {
+                "type": "object",
+                "properties": {
+                    "User_id": {"type": "integer"},
+                },
+                "additionalProperties": False,
+                "required": ["user_id"]
+            }
+        },
         "salesman-profile": {
             'POST': {
                 "type": "object",
@@ -110,9 +120,14 @@ class JsonValidation:
 
         def decorator(*args, **kwargs):
             request = args[1]
+            obj_to_validate = None
             schema = cls.proper_schema(request.path_info.replace('/', ''), request.method)
             validate = fastjsonschema.compile(schema)
-            if validate(request.data):
+            if request.method in ["GET", "DELETE"]:
+                obj_to_validate = request.query_params
+            elif request.method in ["POST", "PUT"]:
+                obj_to_validate = request.data
+            if validate(obj_to_validate):
                 pass
             return f(*args, **kwargs)
 

@@ -117,8 +117,10 @@ class CustomRequest:
         return cls.__handle_request(response, return_data)
 
     @classmethod
-    def del_req(cls, url, user_id, return_data=False, **kwargs):
-        response = requests.delete(cls.__generate_url(url) + user_id, **kwargs)
+    def del_req(cls, url, params=None, return_data=False, **kwargs):
+        if params is None:
+            params = {}
+        response = requests.delete(cls.__generate_url(url), params=params, **kwargs)
         return cls.__handle_request(response, return_data)
 
 
