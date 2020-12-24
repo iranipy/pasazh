@@ -167,7 +167,7 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
                     try:
                         user = models.User.objects.get(id=args[1].data['user_id'])
                     except models.User.DoesNotExist:
-                        return cls.not_found()
+                        return cls.not_found(message='USER_NOT_FOUND')
 
                     if ResponseUtils.check_user(user):
                         return cls.bad_request(message=['DELETED/BANNED_ACCOUNT'])

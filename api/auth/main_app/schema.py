@@ -1,5 +1,6 @@
 import fastjsonschema
 from functools import wraps
+import json
 
 
 class JsonValidation:
@@ -8,7 +9,7 @@ class JsonValidation:
             "GET": {
                 "type": "object",
                 "properties": {
-                    "mobile": {"type": "string", "maxLength": 10},
+                    "mobile": {"type": "string", "pattern": r"^09\d{9}$"},
                     "insert": {"type": "boolean"}
                 },
                 "additionalProperties": False,
@@ -46,7 +47,7 @@ class JsonValidation:
                 "properties": {
                     "user_id": {"type": "integer"},
                     "nick_name": {"type": "string", "minLength": 1, "maxLength": 50},
-                    "email": {"type": "integer", "format": "email"},
+                    "email": {"type": "string", "format": "email"},
                     "picture": {"type": "string"}
                 },
                 "additionalProperties": False,
@@ -124,7 +125,12 @@ class JsonValidation:
             schema = cls.proper_schema(request.path_info.replace('/', ''), request.method)
             validate = fastjsonschema.compile(schema)
             if request.method in ["GET", "DELETE"]:
-                obj_to_validate = request.query_params
+                obj_to_validate = dict()
+                for key in request.query_params:
+                    try:
+                        obj_to_validate[key] = json.loads(request.query_params.get(key))
+                    except json.JSONDecodeError:
+                        obj_to_validate[key] = request.query_params.get(key)
             elif request.method in ["POST", "PUT"]:
                 obj_to_validate = request.data
             if validate(obj_to_validate):

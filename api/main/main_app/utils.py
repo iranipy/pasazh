@@ -14,8 +14,7 @@ class ResponseUtils:
         return model_to_dict(instance)
 
     @staticmethod
-    def rand_digit \
-                    (length: int):
+    def rand_digit (length: int):
         _min = int(pow(10, length - 1))
         _max = int(pow(10, length) - 1)
         return str(randint(_min, _max))
@@ -113,7 +112,7 @@ class CustomRequest:
     def put_req(cls, url, data=None, return_data=False, json="", **kwargs):
         if data is None:
             data = {}
-        response = requests.post(cls.__generate_url(url), data, json, **kwargs)
+        response = requests.put(cls.__generate_url(url), data=data, json=json, **kwargs)
         return cls.__handle_request(response, return_data)
 
     @classmethod
@@ -153,7 +152,6 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest):
                     cls.user = auth_response['user_data']
                     if cls.user is None:
                         return cls.not_found()
-                    return func(*args, **kwargs)
 
                 try:
                     return func(*args, **kwargs)

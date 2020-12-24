@@ -41,12 +41,18 @@ class Province(AbstractModel):
     name = models.CharField(max_length=50, unique=True, default='')
     fa_name = models.CharField(max_length=50, unique=True, default='')
 
+    def __str__(self):
+        return self.name
+
 
 class City(AbstractModel):
     name = models.CharField(max_length=50, unique=True, default='')
     fa_name = models.CharField(max_length=50, unique=True, default='')
     code = models.CharField(max_length=5)
     province = models.ForeignKey(Province, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.name}({self.code}'
 
 
 class JobCategory(AbstractModel):

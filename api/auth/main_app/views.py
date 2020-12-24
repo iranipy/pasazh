@@ -10,7 +10,7 @@ class FindUserByMobile(MetaApiViewClass):
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
-        mobile_number = '+98' + data['mobile']
+        mobile_number = data['mobile']
         try:
             user = User.objects.get(mobile=mobile_number)
         except User.DoesNotExist:
@@ -128,7 +128,6 @@ class SalesManView(MetaApiViewClass):
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
-
         try:
             city = City.objects.get(id=data['city_id'])
         except City.DoesNotExist:
@@ -140,12 +139,16 @@ class SalesManView(MetaApiViewClass):
             return self.bad_request(message=['INVALID_JOB_CATEGORY_ID'])
         open_time = ResponseUtils.iso_date_parser(data['open_time'], 'time')
         close_time = ResponseUtils.iso_date_parser(data['close_time'], 'time')
-        SalesMan.objects.create(
-            user=self.user_by_id, store_name=data['store_name'], job_category=job_category,
-            city=city, address=data['address'], open_time=open_time, close_time=close_time,
-            working_days=data['working_days'], activity_type=data['activity_type'],
-            uid=f'{ResponseUtils.standard_four_digits(city.code)}-{self.user_by_id.uid}-{job_category.uid}'
-        ).save()
+        try:
+            _ = SalesMan.objects.filter(user=self.user_by_id.id)[0]
+            return self.bad_request(message=['SALESMAN_PROFILE_ALREADY_EXIST'])
+        except IndexError:
+            SalesMan.objects.create(
+                user=self.user_by_id, store_name=data['store_name'], job_category=job_category,
+                city=city, address=data['address'], open_time=open_time, close_time=close_time,
+                working_days=data['working_days'], activity_type=data['activity_type'],
+                uid=f'{ResponseUtils.standard_four_digits(city.code)}-{self.user_by_id.uid}-{job_category.uid}'
+            ).save()
 
         return self.success(message=['SALESMAN_CREATED'])
 
@@ -153,7 +156,10 @@ class SalesManView(MetaApiViewClass):
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data
-        salesman = SalesMan.objects.filter(user=self.user_by_id)[0]
+        try:
+            salesman = SalesMan.objects.filter(user=self.user_by_id)[0]
+        except IndexError:
+            return self.not_found(message=['SALESMAN_PROFILE_NOT_FOUND'])
         self.request.data['open_time'] = ResponseUtils.iso_date_parser(data['open_time'], 'time')
         self.request.data['close_time'] = ResponseUtils.iso_date_parser(data['close_time'], 'time')
         for item in data:

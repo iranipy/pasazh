@@ -1,5 +1,6 @@
 import fastjsonschema
 from functools import wraps
+import json
 
 
 class JsonValidation:
@@ -8,17 +9,18 @@ class JsonValidation:
             "POST": {
                 "type": "object",
                 "properties": {
-                    "mobile": {"type": "string", "maxLength": 10},
+                    "mobile": {"type": "string", "pattern": r"^09\d{9}$"},
+                    "insert": {"type": "boolean"}
                 },
                 "additionalProperties": False,
-                "required": ["mobile"]
+                "required": ["mobile", "insert"]
             }
         },
         "confirm-code": {
             "POST": {
                 "type": "object",
                 "properties": {
-                    "mobile": {"type": "string", "maxLength": 10},
+                    "mobile": {"type": "string",  "pattern": r"^09\d{9}$"},
                     "confirm_code": {"type": "string", "maxLength": 6},
                 },
                 "additionalProperties": False,
@@ -30,7 +32,7 @@ class JsonValidation:
                 "type": "object",
                 "properties": {
                     "nick_name": {"type": "string", "minLength": 1, "maxLength": 50},
-                    "email": {"type": "integer", "format": "email"},
+                    "email": {"type": "string", "format": "email"},
                     "picture": {"type": "string"}
                 },
                 "additionalProperties": False
@@ -75,8 +77,7 @@ class JsonValidation:
                     "working_days": {"type": "string", "maxLength": 27},
                     "activity_type": {"type": "string", "maxLength": 3, "enum": ["ON", "OFF", "ALL"]},
                 },
-                "additionalProperties": False,
-                "required": ["user_id"]
+                "additionalProperties": False
             }
         },
         "category": {
@@ -179,7 +180,12 @@ class JsonValidation:
             schema = cls.proper_schema(request.path_info.replace('/', ''), request.method)
             validate = fastjsonschema.compile(schema)
             if request.method in ["GET", "DELETE"]:
-                obj_to_validate = request.query_params
+                obj_to_validate = dict()
+                for key in request.query_params:
+                    try:
+                        obj_to_validate[key] = json.loads(request.query_params.get(key))
+                    except json.JSONDecodeError:
+                        obj_to_validate[key] = request.query_params.get(key)
             elif request.method in ["POST", "PUT"]:
                 obj_to_validate = request.data
             if validate(obj_to_validate):
