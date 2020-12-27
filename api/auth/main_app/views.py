@@ -1,5 +1,5 @@
 import datetime
-from .models import User, OTP, City, SalesMan, JobCategory
+from .models import User, OTP, City, SalesMan, JobCategory, BlackList
 from .utils import MetaApiViewClass, OTPRecord, ResponseUtils, Security
 from .schema import JsonValidation
 
@@ -60,7 +60,10 @@ class ConfirmCode(MetaApiViewClass):
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
-        user = User.objects.get(id=data['user_id'])
+        try:
+            user = User.objects.get(id=data['user_id'])
+        except User.DoesNotExist:
+            return self.not_found(message=['USER_NOT_FOUND'])
         if ResponseUtils.check_user(user):
             return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
 
@@ -170,3 +173,41 @@ class SalesManView(MetaApiViewClass):
         return self.success(message=['SALESMAN_UPDATED'])
 
 
+class Block(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
+    def get(self, request):
+        user = User.objects.get(id=self.request.query_params['user_id'])
+        banned_users = BlackList.objects.filter(user=user)
+        black_list = {usr.banned_user.mobile: usr.banned_user.nick_name if usr.banned_user.nick_name else None for usr
+                      in banned_users}
+
+        return self.success(data={'BlackList': black_list})
+
+    @MetaApiViewClass.generic_decor(True)
+    @JsonValidation.validate
+    def post(self, request):
+        if self.user_by_id.id == self.request.data['banned_user_id']:
+            return self.bad_request(message=['USERS_CAN_NOT_BLOCK_THEMSELVES'])
+        try:
+            banned_user = User.objects.get(id=self.request.data['banned_user_id'])
+        except User.DoesNotExist:
+            return self.not_found(message=['USER_NOT_FOUND'])
+        try:
+            _ = BlackList.objects.filter(user=self.request.data['user_id'],
+                                         banned_user=self.request.data['banned_user_id'])[0]
+            return self.bad_request(message=['USER_ALREADY_IS_IN_BLACKLIST'])
+        except IndexError:
+            BlackList.objects.create(user=self.user_by_id, banned_user=banned_user).save()
+            return self.success(message=['USER_BANNED'])
+
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
+    def delete(self, request):
+        try:
+            banned_user = BlackList.objects.filter(user=self.request.query_params['user_id'],
+                                                   banned_user=self.request.query_params['banned_user_id'])[0]
+        except IndexError:
+            return self.bad_request(message=['USER_IS_NOT_IN_BLACKLIST'])
+        banned_user.delete()
+        return self.success(message=['USER_UNBANNED'])

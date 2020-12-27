@@ -46,7 +46,7 @@ class JsonValidation:
                 "type": "object",
                 "properties": {
                     "user_id": {"type": "integer"},
-                    "nick_name": {"type": "string", "minLength": 1, "maxLength": 50},
+                    "nick_name": {"minLength": 1, "maxLength": 50},
                     "email": {"type": "string", "format": "email"},
                     "picture": {"type": "string"}
                 },
@@ -107,6 +107,33 @@ class JsonValidation:
                 },
                 "additionalProperties": False,
                 "required": ["user_id"]
+            }
+        },
+        "block-user": {
+            "GET": {
+                "properties": {
+                    "user_id": {"type": "integer"},
+                },
+                "additionalProperties": False,
+                "required": ["user_id"]
+            },
+            "POST": {
+                "type": "object",
+                "properties": {
+                   "user_id": {"type": "integer"},
+                   "banned_user_id": {"type": "integer"}
+                },
+                "additionalProperties": False,
+                "required": ["user_id", "banned_user_id"]
+            },
+            "DELETE": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer"},
+                    "banned_user_id": {"type": "integer"}
+                },
+                "additionalProperties": False,
+                "required": ["user_id", "banned_user_id"]
             }
         }
     }

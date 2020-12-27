@@ -70,7 +70,7 @@ class User(AbstractModel):
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.mobile
+        return f"{self.mobile}({self.id})"  # development
 
 
 class SalesMan(AbstractModel):
@@ -109,6 +109,9 @@ class OTP(AbstractModel):
 class BlackList(AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
+
+    def __str__(self):
+        return f'{self.user.mobile} ({self.banned_user.id})'  # development
 
 
 class Following(AbstractModel):

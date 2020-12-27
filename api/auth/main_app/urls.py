@@ -1,6 +1,6 @@
-from django.urls import path, re_path
+from django.urls import re_path
 from .views import (FindUserByMobile, CreateOtp, ConfirmCode, FindUserByToken,
-                    DeleteAccountById, UserProfileUpdate, SalesManView)
+                    DeleteAccountById, UserProfileUpdate, SalesManView, Block)
 
 urlpatterns = [
     re_path(r'^find-user-by-mobile/?$', FindUserByMobile.as_view(), name='find-user-by-mobile'),
@@ -9,8 +9,7 @@ urlpatterns = [
     re_path(r'^find-user-by-token/?$', FindUserByToken.as_view(), name='find-user-by-token'),
     re_path(r'^update-profile/?$', UserProfileUpdate.as_view(), name='update-profile'),
     re_path(r'^delete-account-by-id/?$', DeleteAccountById.as_view(), name='delete-by-id'),
-    re_path(r'^salesman-profile/?$', SalesManView.as_view(), name='salesman-profile')
-
+    re_path(r'^salesman-profile/?$', SalesManView.as_view(), name='salesman-profile'),
+    re_path(r'^block-user/?$', Block.as_view(), name='block-user')
 ]
 
-# urlpatterns += [re_path(r'^update-salesman/?$', UpdateSalesMan.as_view(), name='update-salesman')]
