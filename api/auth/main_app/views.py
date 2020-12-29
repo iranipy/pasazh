@@ -1,7 +1,9 @@
 import datetime
-from .models import User, OTP, City, SalesMan, JobCategory, BlackList
+from .models import User, OTP, City, SalesMan, JobCategory, BlackList, Following
 from .utils import MetaApiViewClass, OTPRecord, ResponseUtils, Security
 from .schema import JsonValidation
+from rest_framework import response, reverse
+from .serializers import UserSerializer
 
 
 class FindUserByMobile(MetaApiViewClass):
@@ -96,7 +98,14 @@ class FindUserByToken(MetaApiViewClass):
         return self.success(data={'user_data': self.user, 'token_data': self.decoded_token})
 
 
-class UserProfileUpdate(MetaApiViewClass):
+class UserProfile(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor()
+    def get(self, request):
+        if self.request.user.is_superuser:
+            users = User.objects.all()
+            serializer = UserSerializer(users, many=True)
+            return response.Response(serializer.data)
+        return self.bad_request(message=['PERMISSION_DENIED'])
 
     @MetaApiViewClass.generic_decor(True)
     @JsonValidation.validate
@@ -105,6 +114,7 @@ class UserProfileUpdate(MetaApiViewClass):
         for item in data:
             if item == 'user_id':
                 continue
+
             setattr(self.user_by_id, item, data[item])
         self.user_by_id.save()
         return self.success(message=['USER_UPDATED'])
@@ -211,3 +221,64 @@ class Block(MetaApiViewClass):
             return self.bad_request(message=['USER_IS_NOT_IN_BLACKLIST'])
         banned_user.delete()
         return self.success(message=['USER_UNBANNED'])
+
+
+class Follow(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
+    def get(self, request):
+        try:
+            user = User.objects.get(id=self.request.query_params['user_id'])
+        except User.DoesNotExist:
+            return self.not_found(message=['USER_NOT_FOUND'])
+        followers = Following.objects.filter(user=user)
+        followers_list = {usr.followed_user.mobile: usr.followed_user.nick_name if usr.followed_user.nick_name else None
+                          for
+                          usr in followers}
+
+        return self.success(data={'followers': followers_list})
+
+    @MetaApiViewClass.generic_decor(True)
+    @JsonValidation.validate
+    def post(self, request):
+        if self.user_by_id.id == self.request.data['followed_user_id']:
+            return self.bad_request(message=['USERS_CAN_NOT_FOLLOW_THEMSELVES'])
+        try:
+            followed_user = User.objects.get(id=self.request.data['followed_user_id'])
+        except User.DoesNotExist:
+            return self.not_found(message=['USER_NOT_FOUND'])
+        if ResponseUtils.check_user(followed_user):
+            return self.bad_request(message=['DELETED?BANNED_ACCOUNT'])
+        try:
+            _ = Following.objects.filter(user=self.request.data['user_id'],
+                                         followed_user=self.request.data['followed_user_id'])[0]
+            return self.bad_request(message=['USER_ALREADY_IS_IN_FOLLOWINGS'])
+        except IndexError:
+            Following.objects.create(user=self.user_by_id, followed_user=followed_user).save()
+            return self.success(message=['USER_FOLLOWED'])
+
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
+    def delete(self, request):
+        try:
+            following = Following.objects.filter(user=self.request.query_params['user_id'],
+                                                 followed_user=self.request.query_params['followed_user_id'])[0]
+        except IndexError:
+            return self.bad_request(message=['USER_IS_NOT_IN_FOLLOWINGS'])
+        following.delete()
+        return self.success(message=['USER_UNFOLLOWED'])
+
+
+class APIRoot(MetaApiViewClass):
+    def get(self, request, format=None):
+        return response.Response({
+            reverse.reverse('find-user-by-mobile', request=request, format=format),
+            reverse.reverse('create-otp', request=request, format=format),
+            reverse.reverse('confirm-code', request=request, format=format),
+            reverse.reverse('find-user-by-token', request=request, format=format),
+            reverse.reverse('delete-account-by-id', request=request, format=format),
+            reverse.reverse('user-profile', request=request, format=format),
+            reverse.reverse('salesman-profile', request=request, format=format),
+            reverse.reverse('block-user', request=request, format=format),
+            reverse.reverse('follow-user', request=request, format=format),
+        })

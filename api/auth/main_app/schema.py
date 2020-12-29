@@ -41,7 +41,7 @@ class JsonValidation:
                 "required": ["confirm_code", "user_id", "confirm_code_try_count_limit"]
             }
         },
-        "update-profile": {
+        "user-profile": {
             "PUT": {
                 "type": "object",
                 "properties": {
@@ -134,6 +134,33 @@ class JsonValidation:
                 },
                 "additionalProperties": False,
                 "required": ["user_id", "banned_user_id"]
+            }
+        },
+        "follow-user": {
+            "GET": {
+                "properties": {
+                    "user_id": {"type": "integer"},
+                },
+                "additionalProperties": False,
+                "required": ["user_id"]
+            },
+            "POST": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer"},
+                    "followed_user_id": {"type": "integer"}
+                },
+                "additionalProperties": False,
+                "required": ["user_id", "followed_user_id"]
+            },
+            "DELETE": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer"},
+                    "followed_user_id": {"type": "integer"}
+                },
+                "additionalProperties": False,
+                "required": ["user_id", "followed_user_id"]
             }
         }
     }
