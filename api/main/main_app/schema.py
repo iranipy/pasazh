@@ -162,6 +162,33 @@ class JsonValidation:
                 "additionalProperties": False,
                 "required": ["category_id"]
             },
+        },
+        "follow-user": {
+            "GET": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer"}
+                },
+                "additionalProperties": False,
+                "required": ["user_id"]
+            },
+            "POST": {
+                "type": "object",
+                "properties": {
+                    "followed_user_id": {"type": "integer"}
+                },
+                "additionalProperties": False,
+                "required": ["followed_user_id"]
+            },
+            "DELETE": {
+                "type": "object",
+                "properties": {
+                    "user_id": {"type": "integer"},
+                    "followed_user_id": {"type": "integer"}
+                },
+                "additionalProperties": False,
+                "required": ["user_id", "followed_user_id"]
+            }
         }
 
     }

@@ -112,7 +112,7 @@ class CustomRequest:
     def put_req(cls, url, data=None, return_data=False, json="", **kwargs):
         if data is None:
             data = {}
-        response = requests.put(cls.__generate_url(url), data=data, json=json, **kwargs)
+        response = requests.put(cls.__generate_url(url), data, json, **kwargs)
         return cls.__handle_request(response, return_data)
 
     @classmethod

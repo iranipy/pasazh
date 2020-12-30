@@ -236,7 +236,7 @@ class Follow(MetaApiViewClass):
                           for
                           usr in followers}
 
-        return self.success(data={'followers': followers_list})
+        return self.success(data={'follower_count': len(followers_list), 'followers': followers_list})
 
     @MetaApiViewClass.generic_decor(True)
     @JsonValidation.validate
@@ -248,7 +248,10 @@ class Follow(MetaApiViewClass):
         except User.DoesNotExist:
             return self.not_found(message=['USER_NOT_FOUND'])
         if ResponseUtils.check_user(followed_user):
-            return self.bad_request(message=['DELETED?BANNED_ACCOUNT'])
+            return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+        second_user = SalesMan.objects.filter(user=followed_user)
+        if not second_user:
+            return self.bad_request(message=['FOLLOWING_NON_SALESMAN_USERS_IS_UNAVAILABLE'])
         try:
             _ = Following.objects.filter(user=self.request.data['user_id'],
                                          followed_user=self.request.data['followed_user_id'])[0]

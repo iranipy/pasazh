@@ -3,7 +3,6 @@ from .utils import MetaApiViewClass, ResponseUtils
 from main_app.models import Product, Category
 from .schema import JsonValidation
 
-
 class Login(MetaApiViewClass):
     __login_attempt_limit_hour = getenv("LOGIN_ATTEMPT_LIMIT_HOUR")
     __confirm_code_expire_minutes = getenv("CONFIRM_CODE_EXPIRE_MINUTES")
@@ -182,3 +181,27 @@ class ProductManagement(MetaApiViewClass):
             return self.bad_request(message=['FORBIDDEN'])
         product.delete()
         return self.success(message=['PRODUCT_DELETED'])
+
+
+class Follow(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
+    def get(self, request):
+        params = {"user_id": self.request.query_params.get('user_id')}
+        self.get_req('/follow-user/', params=params)
+
+    @MetaApiViewClass.generic_decor(True)
+    @JsonValidation.validate
+    def post(self, request):
+        self.request.data['user_id'] = self.user['id']
+        self.post_req('/follow-user/', json=dict(**self.request.data))
+
+    @MetaApiViewClass.generic_decor(True)
+    @JsonValidation.validate
+    def delete(self, request):
+        data = self.request.query_params
+        params = {
+            'user_id': data.get('user_id'),
+            'followed_user_id': data.get('followed_user_id')
+        }
+        self.del_req('/follow-user/', params=params)
