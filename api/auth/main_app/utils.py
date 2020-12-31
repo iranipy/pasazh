@@ -15,6 +15,7 @@ from functools import wraps
 
 
 class Security:
+
     __secret_key = getenv("SECRET_KEY")
 
     @staticmethod
@@ -29,8 +30,7 @@ class Security:
 
     @classmethod
     def jwt_token_generator(cls, **kwargs):
-        kwargs['exp'] = datetime.datetime.utcnow() + \
-                        datetime.timedelta(weeks=100)
+        kwargs['exp'] = datetime.datetime.utcnow() + datetime.timedelta(weeks=100)
         return jwt.encode(kwargs, cls.__secret_key)
 
     @classmethod
@@ -64,7 +64,9 @@ class ResponseUtils:
 
     @staticmethod
     def check_user(user):
-        return user.is_deleted or not user.is_active
+        invalid_user = user.is_deleted or not user.is_active
+        if invalid_user:
+            raise CustomResponse.BadRequest(['DELETED/BANNED_ACCOUNT'])
 
     @staticmethod
     def standard_four_digits(code):
@@ -84,7 +86,9 @@ class ResponseUtils:
 
 
 class CustomResponse:
+
     class CustomResponseException(Exception):
+
         def __init__(self, state='internal_error', message=None, data=None):
             if message is None:
                 message = ['INTERNAL_ERROR']
@@ -93,10 +97,12 @@ class CustomResponse:
             self.data = data
 
     class NotFound(CustomResponseException):
+
         def __init__(self, message, data=None):
             super().__init__("not_found", message, data)
 
     class BadRequest(CustomResponseException):
+
         def __init__(self, message, data=None):
             super().__init__("bad_request", message, data)
 
@@ -143,10 +149,10 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
+
     __auth_token_key = getenv("AUTH_TOKEN_KEY")
 
     token_info = None
-    decoded_token = None
     user = None
     user_by_id = None
 
@@ -160,19 +166,25 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
         return params
 
     @classmethod
-    def generic_decor(cls, user_by_id=False):
+    def generic_decor(cls, user_by_id=False, user_id_in_params=True, serialize=False):
         def decorator(func):
             def inner(*args, **kwargs):
-                if user_by_id:
+                request = args[1]
+                user_id = request.data.get('user_id')
+                if user_id_in_params:
+                    user_id = request.query_params.get('user_id')
+
+                if user_by_id and user_id:
                     try:
-                        user = models.User.objects.get(id=args[1].data['user_id'])
+                        user = models.User.objects.get(id=user_id)
                     except models.User.DoesNotExist:
                         return cls.not_found(message=['USER_NOT_FOUND'])
 
-                    if ResponseUtils.check_user(user):
-                        return cls.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+                    cls.check_user(user)
 
                     cls.user_by_id = user
+                    if serialize:
+                        cls.user_by_id = cls.serialize(user_by_id)
 
                 try:
                     return func(*args, **kwargs)
@@ -199,20 +211,19 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
                 auth_token_key = cls.__auth_token_key
                 params_key = [auth_token_key]
                 params = cls.get_params(request.headers, params_key)
-                cls.decoded_token = Security.jwt_token_decoder(params[auth_token_key])
-                if not cls.decoded_token:
+                cls.token_info = Security.jwt_token_decoder(params[auth_token_key])
+
+                if not cls.token_info or not cls.token_info.get('user_id'):
                     return MetaApiViewClass.bad_request(message=['INVALID_TOKEN'])
 
-                cls.token_info = models.User.objects.get(id=cls.decoded_token['user_id'])
+                cls.user = models.User.objects.get(id=cls.token_info['user_id'])
+
                 if serialize:
-                    cls.user = ResponseUtils.serialize(cls.token_info)
-                    if ResponseUtils.check_user(cls.token_info):
-                        return cls.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+                    cls.user = cls.serialize(cls.user)
+                    cls.check_user(cls.user)
 
                 return f(*args, **kwargs)
 
             return wrapper
 
         return decorator
-
-

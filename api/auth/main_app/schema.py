@@ -1,9 +1,10 @@
 import fastjsonschema
-from functools import wraps
 import json
+from functools import wraps
 
 
 class JsonValidation:
+
     VALIDATOR = {
         "find-user-by-mobile": {
             "GET": {
@@ -13,7 +14,7 @@ class JsonValidation:
                     "insert": {"type": "boolean"}
                 },
                 "additionalProperties": False,
-                "required": ["mobile", "insert"]
+                "required": ["mobile"]
             }
         },
         "create-otp": {
@@ -21,11 +22,10 @@ class JsonValidation:
                 "type": "object",
                 "properties": {
                     "user_id": {"type": "integer"},
-                    "login_attempt_limit_hour": {"type": "integer"},
-                    "confirm_code_expire_minutes": {"type": "integer"}
+                    "login_attempt_limit_hour": {"type": "integer", "minimum": 0},
+                    "confirm_code_expire_minutes": {"type": "integer", "minimum": 1}
                 },
-                "additionalProperties:q"
-                ":q": False,
+                "additionalProperties": False,
                 "required": ["user_id", "login_attempt_limit_hour", "confirm_code_expire_minutes"]
             }
         },
@@ -35,7 +35,7 @@ class JsonValidation:
                 "properties": {
                     "confirm_code": {"type": "string", "minLength": 6, "maxLength": 6},
                     "user_id": {"type": "integer"},
-                    "confirm_code_try_count_limit": {"type": "integer"}
+                    "confirm_code_try_count_limit": {"type": "integer", "minimum": 1}
                 },
                 "additionalProperties": False,
                 "required": ["confirm_code", "user_id", "confirm_code_try_count_limit"]
@@ -46,7 +46,7 @@ class JsonValidation:
                 "type": "object",
                 "properties": {
                     "user_id": {"type": "integer"},
-                    "nick_name": {"minLength": 1, "maxLength": 50},
+                    "nick_name": {"minLength": 5, "maxLength": 50},
                     "email": {"type": "string", "format": "email"},
                     "picture": {"type": "string"}
                 },
@@ -58,7 +58,7 @@ class JsonValidation:
             "DELETE": {
                 "type": "object",
                 "properties": {
-                    "User_id": {"type": "integer"},
+                    "user_id": {"type": "integer"},
                 },
                 "additionalProperties": False,
                 "required": ["user_id"]
@@ -69,19 +69,19 @@ class JsonValidation:
                 "type": "object",
                 "properties": {
                     "user_id": {"type": "integer"},
-                    "store_name": {"type": "string", "maxLength": 50},
+                    "store_name": {"type": "string", "minLength": 5, "maxLength": 50},
                     "city_id": {"type": "integer"},
                     "job_category_id": {"type": "integer"},
-                    "job_category_description": {"type:": "string", "maxLength": 50},
-                    "address": {"type": "string", "maxLength": 200},
+                    "job_category_description": {"type:": "string", "minLength": 5, "maxLength": 50},
+                    "address": {"type": "string", "minLength": 20, "maxLength": 200},
                     "open_time": {"type": "string", "format": "date-time"},
                     "close_time": {"type": "string", "format": "date-time"},
-                    "working_days": {"type": "string", "maxLength": 27},
-                    "activity_type": {"type": "string", "maxLength": 3, "enum": ["ON", "OFF", "ALL"]},
+                    "working_days": {"type": "string", "minLength": 3, "maxLength": 27},
+                    "activity_type": {"type": "string", "minLength": 2, "maxLength": 3, "enum": ["ON", "OFF", "ALL"]},
                     "is_private": {"type": "boolean"},
                     "username": {"type": "string", "minLength": 5, "maxLength": 20},
-                    "full_name": {"type": "string", "maxLength": 50},
-                    "telephone": {"type": "string", "maxLength": 20},
+                    "full_name": {"type": "string", "minLength": 5, "maxLength": 50},
+                    "telephone": {"type": "string", "minLength": 8, "maxLength": 20},
                 },
                 "additionalProperties": False,
                 "required": ["user_id", "store_name", "job_category_id", "city_id",
@@ -166,8 +166,11 @@ class JsonValidation:
     }
 
     @classmethod
-    def proper_schema(cls, url, method):
-        return cls.VALIDATOR.get(url).get(method)
+    def find_schema(cls, url, method):
+        url_validator = cls.VALIDATOR.get(url)
+        if not url_validator:
+            return
+        return url_validator.get(method)
 
     @classmethod
     def validate(cls, f):
@@ -176,8 +179,13 @@ class JsonValidation:
         def decorator(*args, **kwargs):
             request = args[1]
             obj_to_validate = None
-            schema = cls.proper_schema(request.path_info.replace('/', ''), request.method)
+
+            schema = cls.find_schema(request.path_info.replace('/', ''), request.method)
+            if not schema:
+                return f(*args, **kwargs)
+
             validate = fastjsonschema.compile(schema)
+
             if request.method in ["GET", "DELETE"]:
                 obj_to_validate = dict()
                 for key in request.query_params:
@@ -187,8 +195,10 @@ class JsonValidation:
                         obj_to_validate[key] = request.query_params.get(key)
             elif request.method in ["POST", "PUT"]:
                 obj_to_validate = request.data
+
             if validate(obj_to_validate):
                 pass
+
             return f(*args, **kwargs)
 
         return decorator

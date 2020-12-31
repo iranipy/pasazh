@@ -23,8 +23,8 @@ def uid_generator():
 class AbstractModel(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     modified = models.DateTimeField(default=timezone.now)
-    # created_by = models.ForeignKey(User, on_delete=models.SET_NULL)
-    # modified_by = models.ForeignKey(User, on_delete=models.SET_NULL)
+    # created_by = models.ForeignKey(User, on_delete=models.RESTRICT)
+    # modified_by = models.ForeignKey(User, on_delete=models.RESTRICT)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -38,26 +38,29 @@ class AbstractModel(models.Model):
 
 
 class Province(AbstractModel):
-    name = models.CharField(max_length=50, unique=True, default='')
-    fa_name = models.CharField(max_length=50, unique=True, default='')
+    name = models.CharField(max_length=50, unique=True)
+    fa_name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.name
 
 
 class City(AbstractModel):
-    name = models.CharField(max_length=50, unique=True, default='')
-    fa_name = models.CharField(max_length=50, unique=True, default='')
+    name = models.CharField(max_length=50, unique=True)
+    fa_name = models.CharField(max_length=50, unique=True)
     code = models.CharField(max_length=5)
-    province = models.ForeignKey(Province, on_delete=models.CASCADE)
+    province = models.ForeignKey(Province, on_delete=models.RESTRICT)
 
     def __str__(self):
-        return f'{self.name}({self.code}'
+        return f'{self.province.name} - {self.name} ({self.code})'
 
 
 class JobCategory(AbstractModel):
     uid = models.CharField(max_length=4, unique=True, default=decimal_uid_generator)
     name = models.CharField(max_length=50, unique=True, default='')
+
+    def __str__(self):
+        return self.name
 
 
 class User(AbstractModel):
@@ -70,7 +73,7 @@ class User(AbstractModel):
     is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"{self.mobile}({self.id})"  # development
+        return f"{self.mobile} ({self.id})"
 
 
 class SalesMan(AbstractModel):
@@ -87,7 +90,7 @@ class SalesMan(AbstractModel):
     username = models.CharField(max_length=20, null=True, blank=True, unique=True)
     store_name = models.CharField(max_length=50)
     telephone = models.CharField(max_length=20, null=True, blank=True)
-    city = models.ForeignKey(City, null=True, blank=True, on_delete=models.SET_NULL)
+    city = models.ForeignKey(City, on_delete=models.RESTRICT)
     address = models.TextField(max_length=200)
     open_time = models.TimeField()
     close_time = models.TimeField()
@@ -96,7 +99,7 @@ class SalesMan(AbstractModel):
     is_private = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.user.mobile
+        return f"{self.store_name} - {self.user.mobile} ({self.user.id})"
 
 
 class OTP(AbstractModel):
@@ -105,15 +108,21 @@ class OTP(AbstractModel):
     try_count = models.IntegerField(default=0)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return f"{self.user.mobile} ({self.code})"
+
 
 class BlackList(AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
 
     def __str__(self):
-        return f'{self.user.mobile} ({self.banned_user.id})'  # development
+        return f"{self.user.mobile} ({self.banned_user.id})"
 
 
 class Following(AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
+
+    def __str__(self):
+        return f"{self.user.mobile} ({self.followed_user.id})"
