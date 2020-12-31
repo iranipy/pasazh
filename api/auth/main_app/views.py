@@ -1,9 +1,11 @@
 import datetime
-from rest_framework import response, reverse
+
+from rest_framework import response
+
 from .models import User, OTP, City, SalesMan, JobCategory, BlackList, Following
-from .utils import MetaApiViewClass, OTPRecord, Security
 from .schema import JsonValidation
 from .serializers import UserSerializer
+from .utils import MetaApiViewClass, OTPRecord, Security
 
 
 class FindUserByMobile(MetaApiViewClass):
@@ -94,18 +96,21 @@ class UserProfile(MetaApiViewClass):
             users = User.objects.all()
             serializer = UserSerializer(users, many=True)
             return response.Response(serializer.data)
+
         return self.bad_request(message=['PERMISSION_DENIED'])
 
     @MetaApiViewClass.generic_decor(True)
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data
+
         for item in data:
             if item == 'user_id':
                 continue
-
             setattr(self.user_by_id, item, data[item])
+
         self.user_by_id.save()
+
         return self.success(message=['USER_UPDATED'])
 
 
@@ -272,19 +277,3 @@ class Follow(MetaApiViewClass):
         following.delete()
 
         return self.success(message=['USER_UNFOLLOWED'])
-
-
-class APIRoot(MetaApiViewClass):
-
-    def get(self, request, format=None):
-        return response.Response({
-            reverse.reverse('find-user-by-mobile', request=request, format=format),
-            reverse.reverse('create-otp', request=request, format=format),
-            reverse.reverse('confirm-code', request=request, format=format),
-            reverse.reverse('find-user-by-token', request=request, format=format),
-            reverse.reverse('delete-account-by-id', request=request, format=format),
-            reverse.reverse('user-profile', request=request, format=format),
-            reverse.reverse('salesman-profile', request=request, format=format),
-            reverse.reverse('block-user', request=request, format=format),
-            reverse.reverse('follow-user', request=request, format=format),
-        })

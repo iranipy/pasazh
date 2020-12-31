@@ -14,7 +14,7 @@ class AbstractSaleModel(AbstractModel):
     user_score = models.IntegerField(null=True, blank=True)
 
     class Meta:
-        abstract =True
+        abstract = True
 
 
 class CategorySale(AbstractSaleModel):

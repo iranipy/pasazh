@@ -3,6 +3,7 @@ import jwt
 import datetime
 import main_app.models as models
 import isodate
+
 from os import getenv
 from random import randint
 from math import pow
@@ -16,7 +17,7 @@ from functools import wraps
 
 class Security:
 
-    __secret_key = getenv("SECRET_KEY")
+    __secret_key = getenv('SECRET_KEY')
 
     @staticmethod
     def hex_generator():
@@ -99,12 +100,12 @@ class CustomResponse:
     class NotFound(CustomResponseException):
 
         def __init__(self, message, data=None):
-            super().__init__("not_found", message, data)
+            super().__init__('not_found', message, data)
 
     class BadRequest(CustomResponseException):
 
         def __init__(self, message, data=None):
-            super().__init__("bad_request", message, data)
+            super().__init__('bad_request', message, data)
 
     @staticmethod
     def __get_status(state: str):
@@ -150,7 +151,7 @@ class CustomResponse:
 
 class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
 
-    __auth_token_key = getenv("AUTH_TOKEN_KEY")
+    __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
     token_info = None
     user = None

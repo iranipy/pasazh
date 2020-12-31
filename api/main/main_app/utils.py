@@ -1,4 +1,5 @@
 import requests
+
 from os import getenv
 from rest_framework.response import Response
 from rest_framework import status as stat
@@ -14,13 +15,14 @@ class ResponseUtils:
         return model_to_dict(instance)
 
     @staticmethod
-    def rand_digit (length: int):
+    def rand_digit(length: int):
         _min = int(pow(10, length - 1))
         _max = int(pow(10, length) - 1)
         return str(randint(_min, _max))
 
 
 class CustomResponse:
+
     class CustomResponseException(Exception):
         def __init__(self, state='internal_error', message=None, data=None):
             if message is None:
@@ -80,6 +82,7 @@ class CustomResponse:
 
 
 class CustomRequest:
+
     __base_url = f"http://{getenv('HOST')}:{getenv('AUTH_PORT')}"
 
     @classmethod
@@ -123,7 +126,8 @@ class CustomRequest:
         return cls.__handle_request(response, return_data)
 
 
-class MetaApiViewClass(APIView, CustomResponse, CustomRequest):
+class MetaApiViewClass(APIView, CustomResponse, CustomRequest, ResponseUtils):
+
     __auth_token_key = getenv("AUTH_TOKEN_KEY")
 
     token_info = None
@@ -143,13 +147,19 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 if protected:
+                    request = args[1]
                     auth_token_key = cls.__auth_token_key
                     params_key = [auth_token_key]
-                    params = cls.get_params(args[1].headers, params_key)
-                    auth_response = cls.get_req('/find-user-by-token/', params=None, return_data=True,
-                                                headers={auth_token_key: params[auth_token_key]})
-                    cls.token_info = auth_response['token_data']
-                    cls.user = auth_response['user_data']
+                    params = cls.get_params(request.headers, params_key)
+
+                    auth_response = cls.get_req(
+                        '/find-user-by-token/', params=None, return_data=True,
+                        headers={auth_token_key: params[auth_token_key]}
+                    )
+
+                    cls.token_info = auth_response['token_info']
+                    cls.user = auth_response['user']
+
                     if cls.user is None:
                         return cls.not_found()
 

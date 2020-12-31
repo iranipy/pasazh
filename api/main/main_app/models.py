@@ -3,6 +3,11 @@ from django.utils import timezone
 from django.core.validators import validate_image_file_extension
 
 
+def gen_table_name(name: str):
+    prefix = 'main_app'
+    return f'{prefix}_{name}'
+
+
 class AbstractModel(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     modified = models.DateTimeField(default=timezone.now)
@@ -23,12 +28,15 @@ class AbstractModel(models.Model):
 class Category(AbstractModel):
     uid = models.CharField(max_length=4)
     name = models.CharField(max_length=50)
-    parent = models.ForeignKey('Category', on_delete=models.CASCADE, null=True, blank=True)
+    parent = models.ForeignKey('Category', on_delete=models.RESTRICT, null=True, blank=True)
     is_public = models.BooleanField(default=False)
     user_uid = models.CharField(max_length=8, null=True, blank=True)
 
     class Meta:
-        db_table = 'category'
+        db_table = gen_table_name('category')
+
+    def __str__(self):
+        return self.name
 
 
 class Product(AbstractModel):
@@ -36,15 +44,18 @@ class Product(AbstractModel):
     name = models.CharField(max_length=80)
     quantity = models.IntegerField()
     description = models.TextField(max_length=1000)
-    price = models.BigIntegerField()
-    rate = models.FloatField(null=True, blank=True)
-    rate_count = models.IntegerField(null=True, blank=True)
-    view_count = models.IntegerField(default=1)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=12, decimal_places=2)
+    rate = models.FloatField(default=0)
+    rate_count = models.IntegerField(default=0)
+    view_count = models.IntegerField(default=0)
+    category = models.ForeignKey(Category, on_delete=models.RESTRICT)
     thumbnail = models.BinaryField(null=True, validators=[validate_image_file_extension])
 
     class Meta:
-        db_table = 'product'
+        db_table = gen_table_name('product')
+
+    def __str__(self):
+        return self.name
 
 
 class ProductAttachment(AbstractModel):
@@ -55,7 +66,10 @@ class ProductAttachment(AbstractModel):
     description = models.TextField(max_length=100)
 
     class Meta:
-        db_table = 'product_attachment'
+        db_table = gen_table_name('product_attachment')
+
+    def __str__(self):
+        return f'{self.product} - {self.type} ({self.size})'
 
 
 class Option(AbstractModel):
@@ -65,13 +79,19 @@ class Option(AbstractModel):
     product = models.ManyToManyField(Product)
 
     class Meta:
-        db_table = 'option'
+        db_table = gen_table_name('option')
+
+    def __str__(self):
+        return self.name
 
 
 class OptionValue(AbstractModel):
     value = models.CharField(max_length=50)
-    product_option = models.ForeignKey(Option, on_delete=models.CASCADE)
+    option = models.ForeignKey(Option, on_delete=models.CASCADE)
     is_public = models.BooleanField(default=False)
 
     class Meta:
-        db_table = 'option_value'
+        db_table = gen_table_name('option_value')
+
+    def __str__(self):
+        return f'{self.option.name} - {self.value}'

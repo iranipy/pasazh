@@ -1,6 +1,7 @@
 from django.urls import re_path
-from .views import FindUserByMobile, CreateOtp, ConfirmCode, FindUserByToken,
-    DeleteAccountById, UserProfile, SalesManView, Block, Follow
+
+from .views import FindUserByMobile, CreateOtp, ConfirmCode, FindUserByToken, \
+DeleteAccountById, UserProfile, SalesManView, Block, Follow
 
 
 urlpatterns = [

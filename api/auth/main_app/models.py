@@ -1,7 +1,13 @@
+import main_app.utils as utils
+
 from django.db import models
 from django.utils import timezone
 from django.core.validators import validate_image_file_extension
-import main_app.utils as utils
+
+
+def gen_table_name(name: str):
+    prefix = 'main_app'
+    return f'{prefix}_{name}'
 
 
 def decimal_uid_generator():
@@ -41,6 +47,9 @@ class Province(AbstractModel):
     name = models.CharField(max_length=50, unique=True)
     fa_name = models.CharField(max_length=50, unique=True)
 
+    class Meta:
+        db_table = gen_table_name('province')
+
     def __str__(self):
         return self.name
 
@@ -51,6 +60,9 @@ class City(AbstractModel):
     code = models.CharField(max_length=5)
     province = models.ForeignKey(Province, on_delete=models.RESTRICT)
 
+    class Meta:
+        db_table = gen_table_name('city')
+
     def __str__(self):
         return f'{self.province.name} - {self.name} ({self.code})'
 
@@ -58,6 +70,9 @@ class City(AbstractModel):
 class JobCategory(AbstractModel):
     uid = models.CharField(max_length=4, unique=True, default=decimal_uid_generator)
     name = models.CharField(max_length=50, unique=True, default='')
+
+    class Meta:
+        db_table = gen_table_name('job_category')
 
     def __str__(self):
         return self.name
@@ -72,8 +87,11 @@ class User(AbstractModel):
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])
     is_deleted = models.BooleanField(default=False)
 
+    class Meta:
+        db_table = gen_table_name('user')
+
     def __str__(self):
-        return f"{self.mobile} ({self.id})"
+        return f'{self.mobile} ({self.id})'
 
 
 class SalesMan(AbstractModel):
@@ -98,8 +116,11 @@ class SalesMan(AbstractModel):
     activity_type = models.CharField(max_length=3, choices=choices)
     is_private = models.BooleanField(default=False)
 
+    class Meta:
+        db_table = gen_table_name('sales_man')
+
     def __str__(self):
-        return f"{self.store_name} - {self.user.mobile} ({self.user.id})"
+        return f'{self.store_name} - {self.user.mobile} ({self.user.id})'
 
 
 class OTP(AbstractModel):
@@ -108,21 +129,30 @@ class OTP(AbstractModel):
     try_count = models.IntegerField(default=0)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    class Meta:
+        db_table = gen_table_name('otp')
+
     def __str__(self):
-        return f"{self.user.mobile} ({self.code})"
+        return f'{self.user.mobile} ({self.code})'
 
 
 class BlackList(AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
 
+    class Meta:
+        db_table = gen_table_name('black_list')
+
     def __str__(self):
-        return f"{self.user.mobile} ({self.banned_user.id})"
+        return f'{self.user.mobile} ({self.banned_user.id})'
 
 
 class Following(AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
 
+    class Meta:
+        db_table = gen_table_name('following')
+
     def __str__(self):
-        return f"{self.user.mobile} ({self.followed_user.id})"
+        return f'{self.user.mobile} ({self.followed_user.id})'
