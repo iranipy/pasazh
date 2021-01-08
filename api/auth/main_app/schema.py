@@ -5,7 +5,6 @@ from functools import wraps
 
 
 class JsonValidation:
-
     VALIDATOR = {
         'find-user-by-mobile': {
             'GET': {
@@ -121,8 +120,8 @@ class JsonValidation:
             'POST': {
                 'type': 'object',
                 'properties': {
-                   'user_id': {'type': 'integer'},
-                   'banned_user_id': {'type': 'integer'}
+                    'user_id': {'type': 'integer'},
+                    'banned_user_id': {'type': 'integer'}
                 },
                 'additionalProperties': False,
                 'required': ['user_id', 'banned_user_id']
@@ -195,8 +194,7 @@ class JsonValidation:
                     except json.JSONDecodeError:
                         obj_to_validate[key] = request.query_params.get(key)
 
-            if validate(obj_to_validate):
-                pass
+            validate(obj_to_validate)
 
             return f(*args, **kwargs)
 

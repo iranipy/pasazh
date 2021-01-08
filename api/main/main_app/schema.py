@@ -21,7 +21,7 @@ class JsonValidation:
             "POST": {
                 "type": "object",
                 "properties": {
-                    "mobile": {"type": "string",  "pattern": r"^09\d{9}$"},
+                    "mobile": {"type": "string", "pattern": r"^09\d{9}$"},
                     "confirm_code": {"type": "string", "minLength": 6, "maxLength": 6},
                 },
                 "additionalProperties": False,
@@ -220,8 +220,7 @@ class JsonValidation:
                     except json.JSONDecodeError:
                         obj_to_validate[key] = request.query_params.get(key)
 
-            if validate(obj_to_validate):
-                pass
+            validate(obj_to_validate)
 
             return f(*args, **kwargs)
 

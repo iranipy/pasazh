@@ -231,11 +231,14 @@ class Follow(MetaApiViewClass):
     @JsonValidation.validate
     def get(self, request):
         followers = Following.objects.filter(user=self.user_by_id)
-        followers_list = {
-            usr.followed_user.mobile: usr.followed_user.nick_name if usr.followed_user.nick_name else None
-            for usr in followers
-        }
-
+        # followers_list = {
+        #     usr.followed_user.mobile: usr.followed_user.nick_name if usr.followed_user.nick_name else None
+        #     for usr in followers
+        # }
+        follower_list = [
+            {usr.followed_user.nick_name: usr.followed_user.uid if usr.followed_user.nick_name else None} for usr in
+            followers
+        ]
         return self.success(data={'followers_count': len(followers_list), 'followers': followers_list})
 
     @MetaApiViewClass.generic_decor(user_by_id=True)
