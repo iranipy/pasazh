@@ -99,7 +99,7 @@ class UserProfile(MetaApiViewClass):
 
         return self.bad_request(message=['PERMISSION_DENIED'])
 
-    @MetaApiViewClass.generic_decor(True)
+    @MetaApiViewClass.generic_decor(user_by_id=True)
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data

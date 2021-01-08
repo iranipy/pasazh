@@ -20,7 +20,7 @@ def main():
         ) from exc
 
     if sys.argv[1] == 'runserver':
-        host_port = f"{getenv('HOST')}:{getenv('MAIN_PORT')}"
+        host_port = f"{getenv('HOST')}:{getenv('PORT')}"
         try:
             sys.argv.index(host_port)
         except ValueError:

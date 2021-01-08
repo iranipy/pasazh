@@ -13,10 +13,9 @@ class Login(MetaApiViewClass):
     @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def post(self, request):
-        if self.request.data.get('insert'):
-            self.request.data['insert'] = str(self.request.data["insert"]).lower()
-
-        user = self.get_req("/find-user-by-mobile/", params=self.request.data, return_data=True)
+        user = self.get_req("/find-user-by-mobile/", params={
+            'mobile': self.request.data['mobile'], 'insert': 'true'
+        }, return_data=True)
 
         self.post_req("/create-otp/", json={
             'user_id': int(user['id']),

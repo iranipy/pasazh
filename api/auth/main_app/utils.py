@@ -167,11 +167,12 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
         return params
 
     @classmethod
-    def generic_decor(cls, user_by_id=False, user_id_in_params=True, serialize=False):
+    def generic_decor(cls, user_by_id=False, user_id_in_params=False, serialize=False):
         def decorator(func):
             def inner(*args, **kwargs):
                 request = args[1]
                 user_id = request.data.get('user_id')
+
                 if user_id_in_params:
                     user_id = request.query_params.get('user_id')
 
