@@ -20,9 +20,9 @@ def decimal_uid_generator():
 
 
 def uid_generator():
-    uid = utils.Security.hex_generator()
+    uid = utils.Security.hex_generator(4)
     while User.objects.filter(uid=uid).exists():
-        uid = utils.Security.hex_generator()
+        uid = utils.Security.hex_generator(4)
     return uid
 
 
@@ -80,12 +80,18 @@ class JobCategory(AbstractModel):
 
 class User(AbstractModel):
     uid = models.CharField(max_length=8, unique=True, default=uid_generator)
-    mobile = models.CharField(max_length=13, unique=True)
+    mobile = models.CharField(max_length=13)
     nick_name = models.CharField(max_length=50, null=True, blank=True)
     email = models.EmailField(null=True, blank=True, unique=True)
     score = models.IntegerField(default=100)
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])
     is_deleted = models.BooleanField(default=False)
+    is_deleted_uid = models.CharField(max_length=8, null=True, blank=True)
+
+    models.UniqueConstraint(
+        fields=['mobile', 'is_deleted_uid'],
+        name='deleted_user'
+    )
 
     class Meta:
         db_table = gen_table_name('user')
