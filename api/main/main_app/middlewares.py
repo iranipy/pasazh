@@ -9,8 +9,10 @@ def fix_dict_encode(obj=None, return_json=False):
         obj = {}
 
     for key, value in obj.items():
-        if isinstance(value, str) and value.isdigit():
-            obj[key] = unidecode(value.strip())
+        if isinstance(value, str):
+            obj[key] = value.strip()
+            if obj[key].isdigit():
+                obj[key] = unidecode(obj[key])
 
     if return_json:
         return json.dumps(obj, indent=2).encode('utf-8')
