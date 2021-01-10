@@ -20,8 +20,8 @@ class Security:
     __secret_key = getenv('SECRET_KEY')
 
     @staticmethod
-    def hex_generator():
-        return token_hex(4)
+    def hex_generator(length):
+        return token_hex(length)
 
     @staticmethod
     def otp_generator(length: int):

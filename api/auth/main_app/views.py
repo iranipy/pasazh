@@ -6,25 +6,32 @@ from .models import User, OTP, City, SalesMan, JobCategory, BlackList, Following
 from .schema import JsonValidation
 from .serializers import UserSerializer
 from .utils import MetaApiViewClass, OTPRecord, Security
+from main_app.utils import Security
 
 
 class FindUserByMobile(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
+    # @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
 
         try:
-            user = User.objects.get(mobile=data['mobile'])
+            user = User.objects.filter(mobile=data.get('mobile')).order_by('-created_at')[0]
+            if user.is_active is False:
+                return self.bad_request(message=['BANNED_ACCOUNT_CANNOT_REGISTER'])
+            if user.is_deleted_uid:
+                if data.get('insert') is None:
+                    self.check_user(user)
+                new_user = User.objects.create(mobile=data.get('mobile')).save()
+                new_user.save()
+                user = User.objects.get(id=new_user.id)
         except User.DoesNotExist:
             if not data.get('insert'):
                 return self.not_found(message=['USER_NOT_FOUND'])
-            new_user = User.objects.create(mobile=data['mobile'])
+            new_user = User.objects.create(mobile=data.get('mobile'))
             new_user.save()
             user = User.objects.get(id=new_user.id)
-
-        self.check_user(user)
 
         return self.success(data=self.serialize(user))
 
@@ -119,6 +126,7 @@ class DeleteAccountById(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
     def delete(self, request):
         self.user_by_id.is_deleted = True
+        self.user_by_id.is_deleted_uid = Security.hex_generator(4)
         self.user_by_id.save()
         return self.success(message=['USER_DELETED'])
 
@@ -185,12 +193,12 @@ class Block(MetaApiViewClass):
     @JsonValidation.validate
     def get(self, request):
         banned_users = BlackList.objects.filter(user=self.user_by_id)
-        black_list = {
-            usr.banned_user.mobile: usr.banned_user.nick_name if usr.banned_user.nick_name else None
-            for usr in banned_users
-        }
+        black_list = [
+            {usr.banned_user.nick_name: usr.banned_user.uid if usr.banned_user.nick_name else None} for usr in
+            banned_users
+        ]
 
-        return self.success(data={'banned_users_count': len(banned_users), 'blackList': black_list})
+        return self.success(data={'banned_users_count': len(black_list), 'blackList': black_list})
 
     @MetaApiViewClass.generic_decor(user_by_id=True)
     @JsonValidation.validate
@@ -231,15 +239,11 @@ class Follow(MetaApiViewClass):
     @JsonValidation.validate
     def get(self, request):
         followers = Following.objects.filter(user=self.user_by_id)
-        # followers_list = {
-        #     usr.followed_user.mobile: usr.followed_user.nick_name if usr.followed_user.nick_name else None
-        #     for usr in followers
-        # }
         follower_list = [
             {usr.followed_user.nick_name: usr.followed_user.uid if usr.followed_user.nick_name else None} for usr in
             followers
         ]
-        return self.success(data={'followers_count': len(followers_list), 'followers': followers_list})
+        return self.success(data={'followers_count': len(follower_list), 'followers': follower_list})
 
     @MetaApiViewClass.generic_decor(user_by_id=True)
     @JsonValidation.validate
