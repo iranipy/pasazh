@@ -16,7 +16,6 @@ from functools import wraps
 
 
 class Security:
-
     __secret_key = getenv('SECRET_KEY')
 
     @staticmethod
@@ -65,9 +64,10 @@ class ResponseUtils:
 
     @staticmethod
     def check_user(user):
-        invalid_user = user.is_deleted or not user.is_active
-        if invalid_user:
-            raise CustomResponse.BadRequest(['DELETED/BANNED_ACCOUNT'])
+        # invalid_user = user.is_deleted or not user.is_active
+        # if invalid_user:
+        # raise CustomResponse.BadRequest(['DELETED/BANNED_ACCOUNT'])
+        return user.is_deleted or not user.is_active
 
     @staticmethod
     def standard_four_digits(code):
@@ -87,7 +87,6 @@ class ResponseUtils:
 
 
 class CustomResponse:
-
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):
@@ -150,7 +149,11 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
-
+    class VerifyResponse:
+        def __init__(self, msg=None, info=None):
+            self.msg = msg
+            self.info = info
+    __response = None
     __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
     token_info = None
@@ -182,7 +185,8 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
                     except models.User.DoesNotExist:
                         return cls.not_found(message=['USER_NOT_FOUND'])
 
-                    cls.check_user(user)
+                    if cls.check_user(user):
+                        return cls.bad_request(message=['DELETED/BANNED_ACCOUNT'])
 
                     cls.user_by_id = user
                     if serialize:
@@ -204,7 +208,7 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
         return decorator
 
     @classmethod
-    def check_token(cls, serialize: bool):
+    def check_token(cls, place_holder=None):
         def decorator(f):
             wraps(f)
 
@@ -217,12 +221,19 @@ class MetaApiViewClass(APIView, CustomResponse, ResponseUtils):
 
                 if not cls.token_info or not cls.token_info.get('user_id'):
                     return MetaApiViewClass.bad_request(message=['INVALID_TOKEN'])
+                if request.query_params.get('check_user'):
+                    try:
+                        cls.user = models.User.objects.get(id=cls.token_info['user_id'])
+                    except models.User.DoesNotExist:
+                        return cls.bad_request(message=['USER_NOT_FOUND'])
+                    if cls.check_user(cls.user):
+                        if not request.query_params.get('return_user'):
+                            cls.__response = cls.VerifyResponse(msg='DELETED/BANNED_ACCOUNT')
+                        cls.user = cls.serialize(cls.user)
+                        cls.__response = cls.VerifyResponse(info=cls.user)
 
-                cls.user = models.User.objects.get(id=cls.token_info['user_id'])
-
-                if serialize:
-                    cls.user = cls.serialize(cls.user)
-                    cls.check_user(cls.user)
+                else:
+                    cls.__response = cls.VerifyResponse(info=cls.token_info)
 
                 return f(*args, **kwargs)
 

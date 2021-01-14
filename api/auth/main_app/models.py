@@ -86,10 +86,10 @@ class User(AbstractModel):
     score = models.IntegerField(default=100)
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])
     is_deleted = models.BooleanField(default=False)
-    is_deleted_uid = models.CharField(max_length=8, null=True, blank=True)
+    deleted_date = models.BigIntegerField(default=None, blank=True, null=True)
 
     models.UniqueConstraint(
-        fields=['mobile', 'is_deleted_uid'],
+        fields=['mobile', 'deleted_date'],
         name='deleted_user'
     )
 

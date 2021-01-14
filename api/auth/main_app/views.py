@@ -6,12 +6,11 @@ from .models import User, OTP, City, SalesMan, JobCategory, BlackList, Following
 from .schema import JsonValidation
 from .serializers import UserSerializer
 from .utils import MetaApiViewClass, OTPRecord, Security
-from main_app.utils import Security
 
 
 class FindUserByMobile(MetaApiViewClass):
 
-    # @MetaApiViewClass.generic_decor()
+    @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -19,14 +18,18 @@ class FindUserByMobile(MetaApiViewClass):
         try:
             user = User.objects.filter(mobile=data.get('mobile')).order_by('-created_at')[0]
             if user.is_active is False:
-                return self.bad_request(message=['BANNED_ACCOUNT_CANNOT_REGISTER'])
-            if user.is_deleted_uid:
-                if data.get('insert') is None:
-                    self.check_user(user)
-                new_user = User.objects.create(mobile=data.get('mobile')).save()
+                return self.bad_request(message=['BANNED_NUMBER_CANNOT_REGISTER'])
+            if user.deleted_date:
+                if (OTPRecord.current_time() - user.deleted_date) < (24 * 60 * 60 * 1000):  # it should be add to .env
+                    return self.bad_request(message=['TOO_MANY_LOGIN_ATTEMPT'])
+
+                if data.get('insert') is None or self.check_user(user):
+                    return self.bad_request(message=['DELETED/BANNED_ACCOUNT'])
+
+                new_user = User.objects.create(mobile=data.get('mobile'))
                 new_user.save()
                 user = User.objects.get(id=new_user.id)
-        except User.DoesNotExist:
+        except IndexError:
             if not data.get('insert'):
                 return self.not_found(message=['USER_NOT_FOUND'])
             new_user = User.objects.create(mobile=data.get('mobile'))
@@ -90,9 +93,9 @@ class ConfirmCode(MetaApiViewClass):
 class FindUserByToken(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor()
-    @MetaApiViewClass.check_token(serialize=True)
+    @MetaApiViewClass.check_token()
     def get(self, request):
-        return self.success(data={'user': self.user, 'token_info': self.token_info})
+        return self.success(message=[self.__response.msg], data={'user': self.__response.info})
 
 
 class UserProfile(MetaApiViewClass):
@@ -126,7 +129,7 @@ class DeleteAccountById(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
     def delete(self, request):
         self.user_by_id.is_deleted = True
-        self.user_by_id.is_deleted_uid = Security.hex_generator(4)
+        self.user_by_id.deleted_date = OTPRecord.current_time()
         self.user_by_id.save()
         return self.success(message=['USER_DELETED'])
 
@@ -193,9 +196,10 @@ class Block(MetaApiViewClass):
     @JsonValidation.validate
     def get(self, request):
         banned_users = BlackList.objects.filter(user=self.user_by_id)
+        print(banned_users)
         black_list = [
-            {usr.banned_user.nick_name: usr.banned_user.uid if usr.banned_user.nick_name else None} for usr in
-            banned_users
+            {'uid': usr.banned_user.uid, 'nickname': usr.banned_user.nick_name} if
+            usr.banned_user.is_deleted_uid is None else "deleted_account" for usr in banned_users
         ]
 
         return self.success(data={'banned_users_count': len(black_list), 'blackList': black_list})
@@ -240,8 +244,7 @@ class Follow(MetaApiViewClass):
     def get(self, request):
         followers = Following.objects.filter(user=self.user_by_id)
         follower_list = [
-            {usr.followed_user.nick_name: usr.followed_user.uid if usr.followed_user.nick_name else None} for usr in
-            followers
+            {'uid': usr.followed.uid, 'nickname': usr.followed.nick_name} for usr in followers
         ]
         return self.success(data={'followers_count': len(follower_list), 'followers': follower_list})
 

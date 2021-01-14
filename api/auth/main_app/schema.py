@@ -11,10 +11,11 @@ class JsonValidation:
                 'type': 'object',
                 'properties': {
                     'mobile': {'type': 'string', 'pattern': r'^09\d{9}$'},
-                    'insert': {'type': 'boolean'}
+                    'insert': {'type': 'boolean'},
+                    'nickname': {'type': 'string', 'minLength': 3}
                 },
                 'additionalProperties': False,
-                'required': ['mobile']
+                'required': ['mobile', 'nickname']
             }
         },
         'create-otp': {

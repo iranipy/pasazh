@@ -35,7 +35,7 @@ def get_package_info(package_name, version, install_latest):
 
 def install_package(package_name, version, install_latest):
   package = get_package_info(package_name, version, install_latest)
-  subprocess.run(["pip", "install", package])
+  subprocess.run(["pip", "install", package], capture_output=True)
 
 
 def get_installed_package_version(package_name):
