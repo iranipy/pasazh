@@ -9,8 +9,12 @@ def fix_dict_encode(obj=None, return_json=False):
         obj = {}
 
     for key, value in obj.items():
-        if isinstance(value, str):
-            obj[key] = value.strip()
+        val = value
+        if isinstance(val, list) and len(val) > 0:
+            val = val[0]
+
+        if isinstance(val, str):
+            obj[key] = val.strip()
             if obj[key].isdigit():
                 obj[key] = unidecode(obj[key])
 
@@ -27,7 +31,11 @@ class FixRequestParams:
 
     def __call__(self, request, *args, **kwargs):
         body = getattr(request, '_body', request.body)
-        request._body = fix_dict_encode(obj=json.loads(body), return_json=True)
-        request.GET = QueryDict(fix_dict_encode(obj=dict(request.GET)))
+        if body:
+            request._body = fix_dict_encode(obj=json.loads(body), return_json=True)
+
+        query_dict = QueryDict('', mutable=True)
+        query_dict.update(fix_dict_encode(obj=dict(request.GET)))
+        request.GET = query_dict
 
         return self.get_response(request)
