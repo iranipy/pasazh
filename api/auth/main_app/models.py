@@ -2,7 +2,7 @@ import main_app.utils as utils
 
 from django.db import models
 from django.utils import timezone
-from django.core.validators import validate_image_file_extension
+from django.core.validators import validate_image_file_extension, RegexValidator
 
 
 def gen_table_name(name: str):
@@ -80,8 +80,9 @@ class JobCategory(AbstractModel):
 
 class User(AbstractModel):
     uid = models.CharField(max_length=8, unique=True, default=uid_generator)
-    mobile = models.CharField(max_length=13)
-    nick_name = models.CharField(max_length=50, null=True, blank=True)
+    mobile = models.CharField(max_length=13, validators=[RegexValidator(regex=r'^09\d{9}$',
+                                                                        message='Enter a valid phone number')])
+    nick_name = models.CharField(max_length=50)
     email = models.EmailField(null=True, blank=True, unique=True)
     score = models.IntegerField(default=100)
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])

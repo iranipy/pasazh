@@ -12,10 +12,9 @@ class JsonValidation:
                 'properties': {
                     'mobile': {'type': 'string', 'pattern': r'^09\d{9}$'},
                     'insert': {'type': 'boolean'},
-                    'nickname': {'type': 'string', 'minLength': 3}
                 },
                 'additionalProperties': False,
-                'required': ['mobile', 'nickname']
+                'required': ['mobile']
             }
         },
         'create-otp': {
@@ -47,12 +46,12 @@ class JsonValidation:
                 'type': 'object',
                 'properties': {
                     'user_id': {'type': 'integer'},
-                    'nick_name': {'type': 'string', 'minLength': 5, 'maxLength': 50},
+                    'nick_name': {'type': 'string', 'minLength': 3, 'maxLength': 50},
                     'email': {'type': 'string', 'format': 'email'},
-                    'picture': {'type': 'string'}
+                    'picture': {'type': 'string'},
                 },
                 'additionalProperties': False,
-                'required': ['user_id']
+                'required': ['user_id', 'nickname']
             }
         },
         'delete-account-by-id': {
