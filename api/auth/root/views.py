@@ -18,10 +18,10 @@ class FindUserByMobile(MetaApiViewClass):
             check_deletion = not data.get('insert') and user.is_deleted
             self.check_user(user, raise_error=True, check_deletion=check_deletion)
 
-            if user.deleted_date:
-
+            deleted_account_limit_hours = data.get('deleted_account_limit_hours')
+            if user.deleted_date and deleted_account_limit_hours:
                 now = self.get_current_utc_time()
-                if (now - user.deleted_date).seconds <= (24 * 60 * 60):  # it should be add to .env
+                if (now - user.deleted_date).seconds <= (deleted_account_limit_hours * 60 * 60):
                     return self.bad_request(message=[5])
 
         except IndexError:
