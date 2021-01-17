@@ -20,7 +20,8 @@ class FindUserByMobile(MetaApiViewClass):
             if user.is_active is False:
                 return self.bad_request(message=['BANNED_NUMBER_CANNOT_REGISTER'])
             if user.deleted_date:
-                if (OTPRecord.current_time() - user.deleted_date) < (24 * 60 * 60 * 1000):  # it should be add to .env
+                now = datetime.datetime.utcnow()
+                if (now - user.deleted_date).seconds < (24 * 60 * 60):  # it should be add to .env
                     return self.bad_request(message=['TOO_MANY_LOGIN_ATTEMPT'])
 
                 if data.get('insert') is None or self.check_user(user):
