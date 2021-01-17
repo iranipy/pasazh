@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from django.utils import timezone
 from django.core.validators import validate_image_file_extension
@@ -9,8 +11,8 @@ def gen_table_name(name: str):
 
 
 class AbstractModel(models.Model):
-    created_at = models.DateTimeField(default=timezone.now)
-    modified = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=datetime.datetime.utcnow)
+    modified = models.DateTimeField(default=datetime.datetime.utcnow)
     # created_by = models.ForeignKey(User, on_delete=models.SET_NULL)
     # modified_by = models.ForeignKey(User, on_delete=models.SET_NULL)
     is_active = models.BooleanField(default=True)

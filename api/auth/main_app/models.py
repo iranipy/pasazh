@@ -1,4 +1,5 @@
 import main_app.utils as utils
+import datetime
 
 from django.db import models
 from django.utils import timezone
@@ -27,8 +28,8 @@ def uid_generator():
 
 
 class AbstractModel(models.Model):
-    created_at = models.DateTimeField(default=timezone.now)
-    modified = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=datetime.datetime.utcnow)
+    modified = models.DateTimeField(default=datetime.datetime.utcnow)
     # created_by = models.ForeignKey(User, on_delete=models.RESTRICT)
     # modified_by = models.ForeignKey(User, on_delete=models.RESTRICT)
     is_active = models.BooleanField(default=True)
@@ -87,15 +88,16 @@ class User(AbstractModel):
     score = models.IntegerField(default=100)
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])
     is_deleted = models.BooleanField(default=False)
-    deleted_date = models.BigIntegerField(default=None, blank=True, null=True)
-
-    models.UniqueConstraint(
-        fields=['mobile', 'deleted_date'],
-        name='deleted_user'
-    )
+    deleted_date = models.DateTimeField(default=None, blank=True, null=True)
 
     class Meta:
         db_table = gen_table_name('user')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['mobile', 'deleted_date'],
+                name='deleted_user'
+            )
+        ]
 
     def __str__(self):
         return f'{self.mobile} ({self.id})'

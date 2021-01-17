@@ -129,7 +129,7 @@ class DeleteAccountById(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
     def delete(self, request):
         self.user_by_id.is_deleted = True
-        self.user_by_id.deleted_date = OTPRecord.current_time()
+        self.user_by_id.deleted_date = datetime.datetime.utcnow()
         self.user_by_id.save()
         return self.success(message=['USER_DELETED'])
 
