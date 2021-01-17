@@ -9,6 +9,7 @@ class Login(MetaApiViewClass):
     __login_attempt_limit_hour = getenv('LOGIN_ATTEMPT_LIMIT_HOUR')
     __confirm_code_expire_minutes = getenv('CONFIRM_CODE_EXPIRE_MINUTES')
     __otp_code_length = getenv('OTP_CODE_LENGTH')
+    __deleted_account_limit_hours = getenv('DELETED_ACCOUNT_LIMIT_HOURS')
 
     @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
@@ -16,7 +17,8 @@ class Login(MetaApiViewClass):
         data = self.request.data
 
         user = self.get_req('/find-user-by-mobile/', params={
-            'mobile': data['mobile'], 'insert': 'true'
+            'mobile': data['mobile'], 'insert': 'true',
+            'deleted_account_limit_hours': self.__deleted_account_limit_hours
         }, return_data=True)
 
         self.post_req('/create-otp/', json={
@@ -32,6 +34,7 @@ class Login(MetaApiViewClass):
 class ConfirmCode(MetaApiViewClass):
 
     __confirm_code_try_count_limit = getenv('CONFIRM_CODE_TRY_COUNT_LIMIT')
+    __deleted_account_limit_hours = getenv('DELETED_ACCOUNT_LIMIT_HOURS')
 
     @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
@@ -39,7 +42,8 @@ class ConfirmCode(MetaApiViewClass):
         data = self.request.data
 
         user = self.get_req('/find-user-by-mobile/', params={
-            'mobile': data['mobile'], 'insert': 'true'
+            'mobile': data['mobile'], 'insert': 'true',
+            'deleted_account_limit_hours': self.__deleted_account_limit_hours
         }, return_data=True)
 
         self.post_req('/confirm-code/', json={
