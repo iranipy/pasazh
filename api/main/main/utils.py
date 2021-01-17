@@ -1,51 +1,59 @@
 import requests
+import fastjsonschema
+import json
 
 from os import getenv
+from functools import wraps
+from random import randint
 from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
 from django.forms import model_to_dict
-from random import randint
+
+from .messages import messages
+from .schema import schema
 
 
-class ResponseUtils:
+class Helpers:
 
     @staticmethod
-    def serialize(instance):
+    def serialize(instance) -> dict:
         return model_to_dict(instance)
 
     @staticmethod
-    def rand_digit(length: int):
+    def generate_rand_decimal(length: int) -> str:
         _min = int(pow(10, length - 1))
         _max = int(pow(10, length) - 1)
         return str(randint(_min, _max))
 
 
 class CustomResponse:
-
     class CustomResponseException(Exception):
+
         def __init__(self, state='internal_error', message=None, data=None):
             if message is None:
-                message = ['INTERNAL_ERROR']
+                message = [4]
             self.state = state
             self.message = message
             self.data = data
 
     class NotFound(CustomResponseException):
+
         def __init__(self, message, data=None):
-            super().__init__("not_found", message, data)
+            super().__init__('not_found', message, data)
 
     class BadRequest(CustomResponseException):
+
         def __init__(self, message, data=None):
-            super().__init__("bad_request", message, data)
+            super().__init__('bad_request', message, data)
 
     @staticmethod
     def __get_status(state: str):
         return {
-            'success': {'stat': stat.HTTP_200_OK, 'message': ['OK']},
-            'not_found': {'stat': stat.HTTP_404_NOT_FOUND, 'message': ['NOT_FOUND']},
-            'bad_request': {'stat': stat.HTTP_400_BAD_REQUEST, 'message': ['BAD_REQUEST']},
-            'internal_error': {'stat': stat.HTTP_500_INTERNAL_SERVER_ERROR, 'message': ['INTERNAL_ERROR']}
+            'success': {'stat': stat.HTTP_200_OK, 'message': [1]},
+            'not_found': {'stat': stat.HTTP_404_NOT_FOUND, 'message': [2]},
+            'bad_request': {'stat': stat.HTTP_400_BAD_REQUEST, 'message': [3]},
+            'internal_error': {'stat': stat.HTTP_500_INTERNAL_SERVER_ERROR, 'message': [4]},
         }[state]
 
     @classmethod
@@ -53,11 +61,16 @@ class CustomResponse:
         status = cls.__get_status(state)
         if message is None:
             message = status['message']
+
         result = {
-            'message': [m for m in message if isinstance(m, str)],
+            'message': [messages[m] for m in message if isinstance(m, int)],
             'state': state,
-            'data': data
+            'data': data,
         }
+
+        if len(result['message']) == 0 and len(message) > 0:
+            result['message'] = message
+
         return Response(data=result, status=status['stat'])
 
     @classmethod
@@ -83,11 +96,11 @@ class CustomResponse:
 
 class CustomRequest:
 
-    __base_url = f"http://{getenv('HOST')}:{getenv('AUTH_PORT')}"
+    __base_url = f'http://{getenv("HOST")}:{getenv("AUTH_PORT")}'
 
     @classmethod
     def __generate_url(cls, url):
-        return f"{cls.__base_url}{url}"
+        return f'{cls.__base_url}{url}'
 
     @staticmethod
     def __handle_request(response, return_data):
@@ -105,17 +118,17 @@ class CustomRequest:
         return cls.__handle_request(response, return_data)
 
     @classmethod
-    def post_req(cls, url, data=None, return_data=False, json="", **kwargs):
+    def post_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
         if data is None:
             data = {}
-        response = requests.post(cls.__generate_url(url), data, json, **kwargs)
+        response = requests.post(cls.__generate_url(url), data, json_str, **kwargs)
         return cls.__handle_request(response, return_data)
 
     @classmethod
-    def put_req(cls, url, data=None, return_data=False, json="", **kwargs):
+    def put_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
         if data is None:
             data = {}
-        response = requests.put(cls.__generate_url(url), data, json, **kwargs)
+        response = requests.put(cls.__generate_url(url), data, json_str, **kwargs)
         return cls.__handle_request(response, return_data)
 
     @classmethod
@@ -126,21 +139,12 @@ class CustomRequest:
         return cls.__handle_request(response, return_data)
 
 
-class MetaApiViewClass(APIView, CustomResponse, CustomRequest, ResponseUtils):
+class MetaApiViewClass(APIView, CustomResponse, CustomRequest, Helpers):
 
-    __auth_token_key = getenv("AUTH_TOKEN_KEY")
+    __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
     token_info = None
     user = None
-
-    @classmethod
-    def get_params(cls, obj_to_check: dict, params_key: list, required=True):
-        params = {}
-        for p in params_key:
-            params[p] = obj_to_check.get(p)
-            if params[p] is None and required:
-                raise cls.BadRequest([f'{p.upper()}_PARAMETER_IS_REQUIRED'])
-        return params
 
     @classmethod
     def generic_decor(cls, protected=False):
@@ -149,16 +153,15 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest, ResponseUtils):
                 if protected:
                     request = args[1]
                     auth_token_key = cls.__auth_token_key
-                    params_key = [auth_token_key]
-                    params = cls.get_params(request.headers, params_key)
+                    token = request.headers.get(auth_token_key)
 
-                    auth_response = cls.get_req(
+                    res = cls.get_req(
                         '/find-user-by-token/', params=None, return_data=True,
-                        headers={auth_token_key: params[auth_token_key]}
+                        headers={auth_token_key: token}
                     )
 
-                    cls.token_info = auth_response['token_info']
-                    cls.user = auth_response['user']
+                    cls.token_info = res.get('token_info')
+                    cls.user = res.get('user')
 
                     if cls.user is None:
                         return cls.not_found()
@@ -175,5 +178,42 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest, ResponseUtils):
                     return cls.internal_error(message=[str(e)])
 
             return wrapper
+
+        return decorator
+
+
+class JsonValidation:
+
+    @staticmethod
+    def find_schema(url, method):
+        url_validator = schema.get(url)
+        if not url_validator:
+            return
+        return url_validator.get(method)
+
+    @classmethod
+    def validate(cls, f):
+        wraps(f)
+
+        def decorator(*args, **kwargs):
+            request = args[1]
+            obj_to_validate = request.data
+
+            curr_schema = cls.find_schema(request.path_info.replace('/', ''), request.method)
+            if not curr_schema:
+                return f(*args, **kwargs)
+
+            if request.method in ['GET', 'DELETE']:
+                obj_to_validate = {}
+                for key in request.query_params:
+                    try:
+                        obj_to_validate[key] = json.loads(request.query_params.get(key))
+                    except json.JSONDecodeError:
+                        obj_to_validate[key] = request.query_params.get(key)
+
+            validate_schema = fastjsonschema.compile(curr_schema)
+            validate_schema(obj_to_validate)
+
+            return f(*args, **kwargs)
 
         return decorator

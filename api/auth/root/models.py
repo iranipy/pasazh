@@ -1,37 +1,35 @@
-import main_app.utils as utils
 import datetime
 
+import auth.utils as utils
+
 from django.db import models
-from django.utils import timezone
 from django.core.validators import validate_image_file_extension, RegexValidator
 
 
-def gen_table_name(name: str):
-    prefix = 'main_app'
+def generate_table_name(name: str):
+    prefix = 'root'
     return f'{prefix}_{name}'
 
 
-def decimal_uid_generator():
+def generate_decimal_uid():
     try:
         job_category = JobCategory.objects.order_by('-created_at')[0]
-        uid = utils.ResponseUtils.standard_four_digits(int(job_category.uid) + 1)
+        uid = utils.ResponseUtils.add_lead_zero(str(int(job_category.uid) + 1), 4)
     except IndexError:
-        uid = utils.ResponseUtils.standard_four_digits('1')
+        uid = utils.ResponseUtils.add_lead_zero('1', 4)
     return uid
 
 
-def uid_generator():
-    uid = utils.Security.hex_generator(4)
+def generate_hex_uid():
+    uid = utils.Security.generate_hex(4)
     while User.objects.filter(uid=uid).exists():
-        uid = utils.Security.hex_generator(4)
+        uid = utils.Security.generate_hex(4)
     return uid
 
 
 class AbstractModel(models.Model):
     created_at = models.DateTimeField(default=datetime.datetime.utcnow)
-    modified = models.DateTimeField(default=datetime.datetime.utcnow)
-    # created_by = models.ForeignKey(User, on_delete=models.RESTRICT)
-    # modified_by = models.ForeignKey(User, on_delete=models.RESTRICT)
+    modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -39,8 +37,8 @@ class AbstractModel(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.id:
-            self.created = timezone.now()
-        self.modified = timezone.now()
+            self.created_at = datetime.datetime.utcnow()
+        self.modified_at = datetime.datetime.utcnow()
         return super().save(*args, **kwargs)
 
 
@@ -49,7 +47,7 @@ class Province(AbstractModel):
     fa_name = models.CharField(max_length=50, unique=True)
 
     class Meta:
-        db_table = gen_table_name('province')
+        db_table = generate_table_name('province')
 
     def __str__(self):
         return self.name
@@ -62,36 +60,38 @@ class City(AbstractModel):
     province = models.ForeignKey(Province, on_delete=models.RESTRICT)
 
     class Meta:
-        db_table = gen_table_name('city')
+        db_table = generate_table_name('city')
 
     def __str__(self):
         return f'{self.province.name} - {self.name} ({self.code})'
 
 
 class JobCategory(AbstractModel):
-    uid = models.CharField(max_length=4, unique=True, default=decimal_uid_generator)
+    uid = models.CharField(max_length=4, unique=True, default=generate_decimal_uid)
     name = models.CharField(max_length=50, unique=True, default='')
 
     class Meta:
-        db_table = gen_table_name('job_category')
+        db_table = generate_table_name('job_category')
 
     def __str__(self):
         return self.name
 
 
 class User(AbstractModel):
-    uid = models.CharField(max_length=8, unique=True, default=uid_generator)
-    mobile = models.CharField(max_length=13, validators=[RegexValidator(regex=r'^09\d{9}$',
-                                                                        message='Enter a valid phone number')])
+    uid = models.CharField(max_length=8, unique=True, default=generate_hex_uid)
+    mobile = models.CharField(
+        max_length=13,
+        validators=[RegexValidator(regex=r'^09\d{9}$', message='Enter a valid phone number')]
+    )
     nick_name = models.CharField(max_length=50)
-    email = models.EmailField(null=True, blank=True, unique=True)
+    email = models.EmailField(null=True, blank=True)
     score = models.IntegerField(default=100)
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])
     is_deleted = models.BooleanField(default=False)
-    deleted_date = models.DateTimeField(default=None, blank=True, null=True)
+    deleted_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
-        db_table = gen_table_name('user')
+        db_table = generate_table_name('user')
         constraints = [
             models.UniqueConstraint(
                 fields=['mobile', 'deleted_date'],
@@ -109,6 +109,7 @@ class SalesMan(AbstractModel):
         ('OFF', 'Offline'),
         ('ALL', 'All')
     )
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     job_category = models.ForeignKey(JobCategory, on_delete=models.RESTRICT)
     job_category_description = models.CharField(max_length=50, null=True, blank=True)
@@ -126,20 +127,20 @@ class SalesMan(AbstractModel):
     is_private = models.BooleanField(default=False)
 
     class Meta:
-        db_table = gen_table_name('sales_man')
+        db_table = generate_table_name('sales_man')
 
     def __str__(self):
         return f'{self.store_name} - {self.user.mobile} ({self.user.id})'
 
 
 class OTP(AbstractModel):
-    code = models.CharField(max_length=128)
+    code = models.CharField(max_length=16)
     expire = models.BigIntegerField()
     try_count = models.IntegerField(default=0)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = gen_table_name('otp')
+        db_table = generate_table_name('otp')
 
     def __str__(self):
         return f'{self.user.mobile} ({self.code})'
@@ -150,7 +151,7 @@ class BlackList(AbstractModel):
     banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
 
     class Meta:
-        db_table = gen_table_name('black_list')
+        db_table = generate_table_name('black_list')
 
     def __str__(self):
         return f'{self.user.mobile} ({self.banned_user.id})'
@@ -161,7 +162,7 @@ class Following(AbstractModel):
     followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
 
     class Meta:
-        db_table = gen_table_name('following')
+        db_table = generate_table_name('following')
 
     def __str__(self):
         return f'{self.user.mobile} ({self.followed_user.id})'

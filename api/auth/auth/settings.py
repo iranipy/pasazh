@@ -1,6 +1,7 @@
 from pathlib import Path
 from os import getenv
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -16,7 +17,6 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'main_app.apps.MainAppConfig',
+    'root.apps.MainAppConfig',
     'rest_framework',
 ]
 
@@ -36,7 +36,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'main_app.middlewares.FixRequestParams'
+    'auth.middlewares.FixRequestParams',
 ]
 
 ROOT_URLCONF = 'auth.urls'
@@ -60,8 +60,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'auth.wsgi.application'
 
 # Database
-# https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -69,13 +67,11 @@ DATABASES = {
         'PORT': getenv('DB_PORT'),
         'NAME': getenv('DB_NAME'),
         'USER': getenv('DB_USER'),
-        'PASSWORD': getenv('DB_PASSWORD')
-    }
+        'PASSWORD': getenv('DB_PASSWORD'),
+    },
 }
 
 # Password validation
-# https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -93,12 +89,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10
+    'PAGE_SIZE': 10,
 }
 
 # Internationalization
-# https://docs.djangoproject.com/en/3.1/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
@@ -110,6 +104,4 @@ USE_L10N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/3.1/howto/static-files/
-
 STATIC_URL = '/static/'
