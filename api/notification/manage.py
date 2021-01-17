@@ -3,6 +3,10 @@
 import os
 import sys
 
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
 
 def main():
     """Run administrative tasks."""
@@ -15,6 +19,13 @@ def main():
             "available on your PYTHONPATH environment variable? Did you "
             "forget to activate a virtual environment?"
         ) from exc
+    if sys.argv[1] == 'runserver':
+        host_port = f'{os.getenv("HOST")}:{os.getenv("PORT")}'
+        try:
+            sys.argv.index(host_port)
+        except ValueError:
+            sys.argv.append(host_port)
+
     execute_from_command_line(sys.argv)
 
 

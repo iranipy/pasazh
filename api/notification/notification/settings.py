@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'sms.apps.SmsConfig',
+    'sendemail.apps.SendemailConfig',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
