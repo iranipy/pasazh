@@ -28,10 +28,14 @@ class Helpers:
         return model_to_dict(instance)
 
     @staticmethod
-    def check_user(user, raise_error=True, check_deletion=True) -> bool:
+    def check_user(user, raise_error=True, check_deletion=True, **kwargs) -> bool:
         invalid_user = (check_deletion and user.is_deleted) or not user.is_active
         if invalid_user and raise_error:
-            raise CustomResponse.BadRequest(message=[7])
+            response_messages = [7]
+            __messages = kwargs.get('__messages')
+            if __messages and isinstance(__messages, list):
+                response_messages += __messages
+            raise CustomResponse.BadRequest(message=response_messages)
         return invalid_user
 
     @staticmethod

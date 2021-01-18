@@ -56,10 +56,8 @@ schema = {
                 'picture': {'type': 'string'},
             },
             'additionalProperties': False,
-            'required': ['user_id', 'nickname'],
+            'required': ['user_id', 'nick_name'],
         },
-    },
-    'delete-account-by-id': {
         'DELETE': {
             'type': 'object',
             'properties': {
@@ -68,6 +66,7 @@ schema = {
             'additionalProperties': False,
             'required': ['user_id'],
         },
+
     },
     'salesman-profile': {
         'POST': {

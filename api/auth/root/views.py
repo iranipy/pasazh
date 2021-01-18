@@ -15,8 +15,8 @@ class FindUserByMobile(MetaApiViewClass):
         try:
             user = User.objects.filter(mobile=data.get('mobile')).order_by('-created_at')[0]
 
-            check_deletion = not data.get('insert') and user.is_deleted
-            self.check_user(user, raise_error=True, check_deletion=check_deletion)
+            check_deletion = data.get('insert') and user.is_deleted
+            self.check_user(user, raise_error=True, check_deletion=check_deletion, __messages=[34])
 
             deleted_account_limit_hours = data.get('deleted_account_limit_hours')
             if user.deleted_date and deleted_account_limit_hours:
@@ -37,7 +37,6 @@ class FindUserByMobile(MetaApiViewClass):
 
 
 class FindUserByToken(MetaApiViewClass):
-
     __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
     @MetaApiViewClass.generic_decor()
@@ -94,8 +93,10 @@ class ConfirmCode(MetaApiViewClass):
     def post(self, request):
         data = self.request.data
 
-        otp = OTP.objects.filter(user=self.user).order_by('-created_at')[0]
-
+        try:
+            otp = OTP.objects.filter(user=self.user).order_by('-created_at')[0]
+        except IndexError:
+            return self.bad_request(message=[8])
         if otp.expire < self.get_current_time_in_milliseconds():
             return self.bad_request(message=[11])
         elif otp.try_count >= int(data['confirm_code_try_count_limit']):
@@ -129,9 +130,6 @@ class UserProfile(MetaApiViewClass):
         self.user.save()
 
         return self.success(message=[15])
-
-
-class DeleteAccountById(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
     def delete(self, request):
