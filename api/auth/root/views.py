@@ -55,8 +55,9 @@ class FindUserByToken(MetaApiViewClass):
             user = User.objects.get(id=token_info['user_id'])
         except User.DoesNotExist:
             return self.bad_request(message=[8])
+        if data.get('check_user'):
 
-        self.check_user(user, data.get('check_user'))
+            self.check_user(user, data.get('check_user'))
 
         user = self.serialize(user)
 
