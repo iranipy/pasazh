@@ -5,6 +5,7 @@ from root.models import Product, Category
 
 
 class Login(MetaApiViewClass):
+
     __login_attempt_limit_hour = getenv('LOGIN_ATTEMPT_LIMIT_HOUR')
     __confirm_code_expire_minutes = getenv('CONFIRM_CODE_EXPIRE_MINUTES')
     __otp_code_length = getenv('OTP_CODE_LENGTH')
@@ -31,6 +32,7 @@ class Login(MetaApiViewClass):
 
 
 class ConfirmCode(MetaApiViewClass):
+
     __confirm_code_try_count_limit = getenv('CONFIRM_CODE_TRY_COUNT_LIMIT')
     __deleted_account_limit_hours = getenv('DELETED_ACCOUNT_LIMIT_HOURS')
 

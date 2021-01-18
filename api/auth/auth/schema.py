@@ -66,7 +66,6 @@ schema = {
             'additionalProperties': False,
             'required': ['user_id'],
         },
-
     },
     'salesman-profile': {
         'POST': {

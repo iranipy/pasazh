@@ -28,6 +28,7 @@ class Helpers:
 
 
 class CustomResponse:
+
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):
@@ -95,6 +96,7 @@ class CustomResponse:
 
 
 class CustomRequest:
+
     __base_url = f'http://{getenv("HOST")}:{getenv("AUTH_PORT")}'
 
     @classmethod
@@ -139,13 +141,14 @@ class CustomRequest:
 
 
 class MetaApiViewClass(APIView, CustomResponse, CustomRequest, Helpers):
+
     __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
     token_info = None
     user = None
 
     @classmethod
-    def generic_decor(cls, protected: bool = False, return_token_info: bool = False, check_user: bool = False):
+    def generic_decor(cls, protected=False, return_token_info=False, check_user=False):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 if protected:
@@ -204,10 +207,7 @@ class JsonValidation:
             if request.method in ['GET', 'DELETE']:
                 obj_to_validate = {}
                 for key in request.query_params:
-                    try:
-                        obj_to_validate[key] = json.loads(request.query_params.get(key))
-                    except json.JSONDecodeError:
-                        obj_to_validate[key] = request.query_params.get(key)
+                    obj_to_validate[key] = request.query_params.get(key)
 
             validate_schema = fastjsonschema.compile(curr_schema)
             validate_schema(obj_to_validate)

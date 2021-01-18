@@ -3,7 +3,6 @@ import jwt
 import datetime
 import isodate
 import fastjsonschema
-import json
 
 import root.models as models
 
@@ -28,14 +27,19 @@ class Helpers:
         return model_to_dict(instance)
 
     @staticmethod
-    def check_user(user, raise_error=True, check_deletion=True, **kwargs) -> bool:
+    def check_user(user, raise_error=True, check_deletion=True, extra_messages=None) -> bool:
+        if extra_messages is None:
+            extra_messages = []
+
         invalid_user = (check_deletion and user.is_deleted) or not user.is_active
+
         if invalid_user and raise_error:
-            response_messages = [7]
-            __messages = kwargs.get('__messages')
-            if __messages and isinstance(__messages, list):
-                response_messages += __messages
-            raise CustomResponse.BadRequest(message=response_messages)
+            message = [7]
+            if extra_messages and isinstance(extra_messages, list):
+                message += extra_messages
+
+            raise CustomResponse.BadRequest(message=message)
+
         return invalid_user
 
     @staticmethod
@@ -65,12 +69,9 @@ class Helpers:
         _max = int(pow(10, length) - 1)
         return str(randint(_min, _max))
 
-    @staticmethod
-    def deserialize(obj):
-        return json.load(obj)
-
 
 class Security:
+
     __secret_key = getenv('SECRET_KEY')
 
     @staticmethod
@@ -106,6 +107,7 @@ class OTPRecord:
 
 
 class CustomResponse:
+
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):
@@ -173,6 +175,7 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, CustomResponse, Helpers):
+
     user = None
 
     @classmethod
@@ -191,7 +194,7 @@ class MetaApiViewClass(APIView, CustomResponse, Helpers):
                     except models.User.DoesNotExist:
                         return cls.not_found(message=[8])
 
-                    # cls.check_user(user)
+                    cls.check_user(user)
 
                     cls.user = user
                     if serialize:
@@ -238,6 +241,7 @@ class JsonValidation:
                 obj_to_validate = {}
                 for key in request.query_params:
                     obj_to_validate[key] = request.query_params.get(key)
+
             validate_schema = fastjsonschema.compile(curr_schema)
             validate_schema(obj_to_validate)
 

@@ -30,7 +30,7 @@ schema = {
                 'picture': {'type': 'string'},
             },
             'additionalProperties': False,
-            'required': ['nickname'],
+            'required': ['nick_name'],
         },
     },
     'salesman-profile': {

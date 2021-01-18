@@ -15,8 +15,8 @@ class FindUserByMobile(MetaApiViewClass):
         try:
             user = User.objects.filter(mobile=data.get('mobile')).order_by('-created_at')[0]
 
-            check_deletion = data.get('insert') and user.is_deleted
-            self.check_user(user, raise_error=True, check_deletion=check_deletion, __messages=[34])
+            check_deletion = not data.get('insert')
+            self.check_user(user, raise_error=True, check_deletion=check_deletion, extra_messages=[5])
 
             deleted_account_limit_hours = data.get('deleted_account_limit_hours')
             if user.deleted_date and deleted_account_limit_hours:
@@ -37,6 +37,7 @@ class FindUserByMobile(MetaApiViewClass):
 
 
 class FindUserByToken(MetaApiViewClass):
+
     __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
     @MetaApiViewClass.generic_decor()
@@ -55,9 +56,8 @@ class FindUserByToken(MetaApiViewClass):
             user = User.objects.get(id=token_info['user_id'])
         except User.DoesNotExist:
             return self.bad_request(message=[8])
-        if data.get('check_user'):
 
-            self.check_user(user, data.get('check_user'))
+        self.check_user(user, data.get('check_user'))
 
         user = self.serialize(user)
 
@@ -97,7 +97,8 @@ class ConfirmCode(MetaApiViewClass):
         try:
             otp = OTP.objects.filter(user=self.user).order_by('-created_at')[0]
         except IndexError:
-            return self.bad_request(message=[8])
+            return self.bad_request(message=[34])
+
         if otp.expire < self.get_current_time_in_milliseconds():
             return self.bad_request(message=[11])
         elif otp.try_count >= int(data['confirm_code_try_count_limit']):
@@ -203,7 +204,7 @@ class Block(MetaApiViewClass):
     def get(self, request):
         banned_users = BlackList.objects.filter(user=self.user)
         black_list = [
-            {'uid': usr.banned_user.uid, 'nickname': usr.banned_user.nick_name}
+            {'uid': usr.banned_user.uid, 'nick_name': usr.banned_user.nick_name}
             if not usr.banned_user.is_deleted else 'deleted_account' for usr in banned_users
         ]
 
@@ -256,7 +257,7 @@ class Follow(MetaApiViewClass):
     def get(self, request):
         followers = Following.objects.filter(user=self.user)
         follower_list = [
-            {'uid': usr.followed.uid, 'nickname': usr.followed.nick_name}
+            {'uid': usr.followed.uid, 'nick_name': usr.followed.nick_name}
             for usr in followers if not usr.banned_user.is_deleted
         ]
 

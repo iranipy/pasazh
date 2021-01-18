@@ -1,7 +1,7 @@
 from django.urls import re_path
 
 from .views import FindUserByMobile, FindUserByToken, CreateOtp, ConfirmCode, \
-    UserProfile, SalesManView, Block, Follow
+UserProfile, SalesManView, Block, Follow
 
 
 def generate_url_item(url, view):

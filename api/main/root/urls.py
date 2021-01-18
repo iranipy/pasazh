@@ -1,7 +1,7 @@
 from django.urls import re_path
 
 from .views import Login, ConfirmCode, Verify, UpdateUserProfile, \
-    SalesManView, ProductManagement, CategoryManagement, Follow
+SalesManView, ProductManagement, CategoryManagement, Follow
 
 
 def generate_url_item(url, view):
