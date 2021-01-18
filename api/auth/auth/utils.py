@@ -65,9 +65,12 @@ class Helpers:
         _max = int(pow(10, length) - 1)
         return str(randint(_min, _max))
 
+    @staticmethod
+    def deserialize(obj):
+        return json.load(obj)
+
 
 class Security:
-
     __secret_key = getenv('SECRET_KEY')
 
     @staticmethod
@@ -103,7 +106,6 @@ class OTPRecord:
 
 
 class CustomResponse:
-
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):
@@ -146,7 +148,7 @@ class CustomResponse:
 
         if len(result['message']) == 0 and len(message) > 0:
             result['message'] = message
-        
+
         return Response(data=result, status=status['stat'])
 
     @classmethod
@@ -171,7 +173,6 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, CustomResponse, Helpers):
-
     user = None
 
     @classmethod
@@ -190,7 +191,7 @@ class MetaApiViewClass(APIView, CustomResponse, Helpers):
                     except models.User.DoesNotExist:
                         return cls.not_found(message=[8])
 
-                    cls.check_user(user)
+                    # cls.check_user(user)
 
                     cls.user = user
                     if serialize:
@@ -236,11 +237,7 @@ class JsonValidation:
             if request.method in ['GET', 'DELETE']:
                 obj_to_validate = {}
                 for key in request.query_params:
-                    try:
-                        obj_to_validate[key] = json.loads(request.query_params.get(key))
-                    except json.JSONDecodeError:
-                        obj_to_validate[key] = request.query_params.get(key)
-
+                    obj_to_validate[key] = request.query_params.get(key)
             validate_schema = fastjsonschema.compile(curr_schema)
             validate_schema(obj_to_validate)
 

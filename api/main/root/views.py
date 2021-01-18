@@ -5,7 +5,6 @@ from root.models import Product, Category
 
 
 class Login(MetaApiViewClass):
-
     __login_attempt_limit_hour = getenv('LOGIN_ATTEMPT_LIMIT_HOUR')
     __confirm_code_expire_minutes = getenv('CONFIRM_CODE_EXPIRE_MINUTES')
     __otp_code_length = getenv('OTP_CODE_LENGTH')
@@ -32,7 +31,6 @@ class Login(MetaApiViewClass):
 
 
 class ConfirmCode(MetaApiViewClass):
-
     __confirm_code_try_count_limit = getenv('CONFIRM_CODE_TRY_COUNT_LIMIT')
     __deleted_account_limit_hours = getenv('DELETED_ACCOUNT_LIMIT_HOURS')
 
@@ -60,20 +58,17 @@ class Verify(MetaApiViewClass):
         return self.success(data={'user': self.user})
 
 
-class DeleteAccount(MetaApiViewClass):
-
-    @MetaApiViewClass.generic_decor(protected=True)
-    def delete(self, request):
-        self.del_req('/delete-account-by-id/', params={'user_id': self.user['id']})
-
-
 class UpdateUserProfile(MetaApiViewClass):
 
     @MetaApiViewClass.generic_decor(protected=True)
     @JsonValidation.validate
     def put(self, request):
         self.request.data['user_id'] = self.user['id']
-        self.put_req('/update-profile/', json=dict(**self.request.data))
+        self.put_req('/user-profile/', json=dict(**self.request.data))
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    def delete(self, request):
+        self.del_req('/user-profile/', params={'user_id': self.user['id']})
 
 
 class SalesManView(MetaApiViewClass):

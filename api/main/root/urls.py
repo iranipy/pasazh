@@ -1,7 +1,7 @@
 from django.urls import re_path
 
-from .views import Login, ConfirmCode, Verify, UpdateUserProfile, DeleteAccount, \
-SalesManView, ProductManagement, CategoryManagement, Follow
+from .views import Login, ConfirmCode, Verify, UpdateUserProfile, \
+    SalesManView, ProductManagement, CategoryManagement, Follow
 
 
 def generate_url_item(url, view):
@@ -14,7 +14,6 @@ urlpatterns = [
     generate_url_item('confirm-code', ConfirmCode),
     generate_url_item('verify', Verify),
     generate_url_item('update-profile', UpdateUserProfile),
-    generate_url_item('delete-account', DeleteAccount),
     generate_url_item('salesman-profile', SalesManView),
     generate_url_item('product', ProductManagement),
     generate_url_item('category', CategoryManagement),

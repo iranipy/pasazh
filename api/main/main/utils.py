@@ -95,7 +95,6 @@ class CustomResponse:
 
 
 class CustomRequest:
-
     __base_url = f'http://{getenv("HOST")}:{getenv("AUTH_PORT")}'
 
     @classmethod
@@ -140,14 +139,13 @@ class CustomRequest:
 
 
 class MetaApiViewClass(APIView, CustomResponse, CustomRequest, Helpers):
-
     __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
     token_info = None
     user = None
 
     @classmethod
-    def generic_decor(cls, protected=False):
+    def generic_decor(cls, protected: bool = False, return_token_info: bool = False, check_user: bool = False):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 if protected:
@@ -156,7 +154,7 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest, Helpers):
                     token = request.headers.get(auth_token_key)
 
                     res = cls.get_req(
-                        '/find-user-by-token/', params=None, return_data=True,
+                        '/find-user-by-token/', params=params, return_data=True,
                         headers={auth_token_key: token}
                     )
 

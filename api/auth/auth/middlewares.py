@@ -14,9 +14,14 @@ def fix_dict_encode(obj=None, return_json=False):
             val = val[0]
 
         if isinstance(val, str):
-            obj[key] = val.strip()
-            if obj[key].isdigit():
-                obj[key] = unidecode(obj[key])
+            val = val.strip()
+            if val.isdigit():
+                obj[key] = unidecode(val)
+                continue
+            try:
+                obj[key] = json.loads(val)
+            except json.JSONDecodeError:
+                obj[key] = val
 
     if return_json:
         return json.dumps(obj, indent=2).encode('utf-8')
