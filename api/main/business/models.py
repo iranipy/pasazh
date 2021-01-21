@@ -1,27 +1,9 @@
-import datetime
-
+from main.utils import AbstractModel, Helpers
 from django.db import models
 from django.core.validators import validate_image_file_extension
 
 
-def generate_table_name(name: str):
-    prefix = 'main'
-    return f'{prefix}_{name}'
-
-
-class AbstractModel(models.Model):
-    created_at = models.DateTimeField(default=datetime.datetime.utcnow)
-    modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        if not self.id:
-            self.created_at = datetime.datetime.utcnow()
-        self.modified_at = datetime.datetime.utcnow()
-        return super().save(*args, **kwargs)
+generate_table_name = Helpers.generate_table_name('business')
 
 
 class Category(AbstractModel):

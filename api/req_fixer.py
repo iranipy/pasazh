@@ -3,7 +3,7 @@ import sys
 import re
 
 
-FILE_PATH = "requirements.txt"
+FILE_PATH = "../requirements.txt"
 LATEST_SWITCH = "--latest"
 
 

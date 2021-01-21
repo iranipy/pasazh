@@ -1,6 +1,6 @@
 import requests
 import fastjsonschema
-import json
+import datetime
 
 from os import getenv
 from functools import wraps
@@ -9,9 +9,26 @@ from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
 from django.forms import model_to_dict
+from django.db import models
+from django.urls import re_path
 
 from .messages import messages
 from .schema import schema
+
+
+class AbstractModel(models.Model):
+    created_at = models.DateTimeField(default=datetime.datetime.utcnow)
+    modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.created_at = datetime.datetime.utcnow()
+        self.modified_at = datetime.datetime.utcnow()
+        return super().save(*args, **kwargs)
 
 
 class Helpers:
@@ -25,6 +42,18 @@ class Helpers:
         _min = int(pow(10, length - 1))
         _max = int(pow(10, length) - 1)
         return str(randint(_min, _max))
+
+    @staticmethod
+    def generate_url_item(url, view):
+        url = f'^{url}/?$'
+        return re_path(url, view.as_view(), name=url)
+
+    @staticmethod
+    def generate_table_name(prefix: str):
+        def inner(name: str):
+            return f'{prefix}_{name}'
+
+        return inner
 
 
 class CustomResponse:
@@ -155,6 +184,11 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest, Helpers):
                     request = args[1]
                     auth_token_key = cls.__auth_token_key
                     token = request.headers.get(auth_token_key)
+
+                    params = {
+                        "return_token_info": return_token_info,
+                        "check_user": check_user,
+                    }
 
                     res = cls.get_req(
                         '/find-user-by-token/', params=params, return_data=True,
