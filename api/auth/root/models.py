@@ -1,22 +1,18 @@
-import datetime
-
 import auth.utils as utils
 
 from django.db import models
 from django.core.validators import validate_image_file_extension, RegexValidator
 
 
-def generate_table_name(name: str):
-    prefix = 'root'
-    return f'{prefix}_{name}'
+generate_table_name = utils.Helpers.generate_table_name('business')
 
 
 def generate_decimal_uid():
     try:
         job_category = JobCategory.objects.order_by('-created_at')[0]
-        uid = utils.ResponseUtils.add_lead_zero(str(int(job_category.uid) + 1), 4)
+        uid = utils.Helpers.add_lead_zero(str(int(job_category.uid) + 1), 4)
     except IndexError:
-        uid = utils.ResponseUtils.add_lead_zero('1', 4)
+        uid = utils.Helpers.add_lead_zero('1', 4)
     return uid
 
 
@@ -27,22 +23,7 @@ def generate_hex_uid():
     return uid
 
 
-class AbstractModel(models.Model):
-    created_at = models.DateTimeField(default=datetime.datetime.utcnow)
-    modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        if not self.id:
-            self.created_at = datetime.datetime.utcnow()
-        self.modified_at = datetime.datetime.utcnow()
-        return super().save(*args, **kwargs)
-
-
-class Province(AbstractModel):
+class Province(utils.AbstractModel):
     name = models.CharField(max_length=50, unique=True)
     fa_name = models.CharField(max_length=50, unique=True)
 
@@ -53,7 +34,7 @@ class Province(AbstractModel):
         return self.name
 
 
-class City(AbstractModel):
+class City(utils.AbstractModel):
     name = models.CharField(max_length=50, unique=True)
     fa_name = models.CharField(max_length=50, unique=True)
     code = models.CharField(max_length=5)
@@ -66,7 +47,7 @@ class City(AbstractModel):
         return f'{self.province.name} - {self.name} ({self.code})'
 
 
-class JobCategory(AbstractModel):
+class JobCategory(utils.AbstractModel):
     uid = models.CharField(max_length=4, unique=True, default=generate_decimal_uid)
     name = models.CharField(max_length=50, unique=True, default='')
 
@@ -77,7 +58,7 @@ class JobCategory(AbstractModel):
         return self.name
 
 
-class User(AbstractModel):
+class User(utils.AbstractModel):
     uid = models.CharField(max_length=8, unique=True, default=generate_hex_uid)
     mobile = models.CharField(
         max_length=13,
@@ -103,7 +84,7 @@ class User(AbstractModel):
         return f'{self.mobile} ({self.id})'
 
 
-class SalesMan(AbstractModel):
+class SalesMan(utils.AbstractModel):
     choices = (
         ('ON', 'Online'),
         ('OFF', 'Offline'),
@@ -133,7 +114,7 @@ class SalesMan(AbstractModel):
         return f'{self.store_name} - {self.user.mobile} ({self.user.id})'
 
 
-class OTP(AbstractModel):
+class OTP(utils.AbstractModel):
     code = models.CharField(max_length=16)
     expire = models.BigIntegerField()
     try_count = models.IntegerField(default=0)
@@ -146,7 +127,7 @@ class OTP(AbstractModel):
         return f'{self.user.mobile} ({self.code})'
 
 
-class BlackList(AbstractModel):
+class BlackList(utils.AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     banned_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='banned_user')
 
@@ -157,7 +138,7 @@ class BlackList(AbstractModel):
         return f'{self.user.mobile} ({self.banned_user.id})'
 
 
-class Following(AbstractModel):
+class Following(utils.AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     followed_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followed_user')
 

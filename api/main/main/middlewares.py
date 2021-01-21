@@ -2,6 +2,7 @@ import json
 
 from unidecode import unidecode
 from django.http import QueryDict
+from django.urls import reverse
 
 
 def fix_dict_encode(obj=None, return_json=False):
@@ -37,6 +38,9 @@ class FixRequestParams:
         self.get_response = get_response
 
     def __call__(self, request, *args, **kwargs):
+        if request.path.startswith(reverse('admin:index')):
+            return None
+
         body = getattr(request, '_body', request.body)
         if body:
             request._body = fix_dict_encode(obj=json.loads(body), return_json=True)

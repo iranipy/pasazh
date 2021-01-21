@@ -1,21 +1,18 @@
-from django.urls import re_path
-
+from auth.utils import Helpers
 from .views import FindUserByMobile, FindUserByToken, CreateOtp, ConfirmCode, \
 UserProfile, SalesManView, Block, Follow
 
 
-def generate_url_item(url, view):
-    url = f'^{url}/?$'
-    return re_path(url, view.as_view(), name=url)
+gen_url = Helpers.generate_url_item
 
 
 urlpatterns = [
-    generate_url_item('find-user-by-mobile', FindUserByMobile),
-    generate_url_item('find-user-by-token', FindUserByToken),
-    generate_url_item('create-otp', CreateOtp),
-    generate_url_item('confirm-code', ConfirmCode),
-    generate_url_item('user-profile', UserProfile),
-    generate_url_item('salesman-profile', SalesManView),
-    generate_url_item('block-user', Block),
-    generate_url_item('follow-user', Follow),
+    gen_url('find-user-by-mobile', FindUserByMobile),
+    gen_url('find-user-by-token', FindUserByToken),
+    gen_url('create-otp', CreateOtp),
+    gen_url('confirm-code', ConfirmCode),
+    gen_url('user-profile', UserProfile),
+    gen_url('salesman-profile', SalesManView),
+    gen_url('block-user', Block),
+    gen_url('follow-user', Follow),
 ]

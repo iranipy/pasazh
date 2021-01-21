@@ -8,7 +8,7 @@ from random import randint
 from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
-from django.forms import model_to_dict
+from django.forms.models import model_to_dict
 from django.db import models
 from django.urls import re_path
 

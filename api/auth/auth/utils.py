@@ -4,7 +4,7 @@ import datetime
 import isodate
 import fastjsonschema
 
-import root.models as models
+import root.models as root_models
 
 from os import getenv
 from random import randint
@@ -15,9 +15,26 @@ from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
 from django.forms.models import model_to_dict
+from django.db import models
+from django.urls import re_path
 
 from .messages import messages
 from .schema import schema
+
+
+class AbstractModel(models.Model):
+    created_at = models.DateTimeField(default=datetime.datetime.utcnow)
+    modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        abstract = True
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.created_at = datetime.datetime.utcnow()
+        self.modified_at = datetime.datetime.utcnow()
+        return super().save(*args, **kwargs)
 
 
 class Helpers:
@@ -68,6 +85,18 @@ class Helpers:
         _min = int(pow(10, length - 1))
         _max = int(pow(10, length) - 1)
         return str(randint(_min, _max))
+
+    @staticmethod
+    def generate_url_item(url, view):
+        url = f'^{url}/?$'
+        return re_path(url, view.as_view(), name=url)
+
+    @staticmethod
+    def generate_table_name(prefix: str):
+        def inner(name: str):
+            return f'{prefix}_{name}'
+
+        return inner
 
 
 class Security:
@@ -190,8 +219,8 @@ class MetaApiViewClass(APIView, CustomResponse, Helpers):
 
                 if user_by_id and user_id:
                     try:
-                        user = models.User.objects.get(id=user_id)
-                    except models.User.DoesNotExist:
+                        user = root_models.User.objects.get(id=user_id)
+                    except root_models.User.DoesNotExist:
                         return cls.not_found(message=[8])
 
                     cls.check_user(user)

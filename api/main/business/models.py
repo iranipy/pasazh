@@ -1,6 +1,7 @@
-from main.utils import AbstractModel, Helpers
 from django.db import models
 from django.core.validators import validate_image_file_extension
+
+from main.utils import AbstractModel, Helpers
 
 
 generate_table_name = Helpers.generate_table_name('business')
