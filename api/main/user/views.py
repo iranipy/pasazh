@@ -33,3 +33,24 @@ class Follow(MetaApiViewClass):
         data = self.request.query_params
         params = {'user_id': self.user['id'], 'followed_user_id': data['followed_user_id']}
         self.del_req('/follow-user/', params=params)
+
+
+class Block(MetaApiViewClass):
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def get(self, request):
+        self.get_req('/block-user/', params={'user_id': self.user['id']})
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def post(self, request):
+        self.request.data['user_id'] = self.user['id']
+        self.post_req('/block-user/', json=dict(**self.request.data))
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def delete(self, request):
+        data = self.request.query_params
+        params = {'user_id': self.user['id'], 'banned_user_id': data['banned_user_id']}
+        self.del_req('/block-user/', params=params)
