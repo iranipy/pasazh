@@ -142,8 +142,8 @@ class ProductManagement(MetaApiViewClass):
         return self.success(message=[15])
 
 
-#  ToDO
 class ProductAttachmentManagement(MetaApiViewClass):
+
     @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def get(self, request):
@@ -166,6 +166,7 @@ class ProductAttachmentManagement(MetaApiViewClass):
 
 
 class OptionManagement(MetaApiViewClass):
+
     @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def get(self, request):
@@ -188,6 +189,7 @@ class OptionManagement(MetaApiViewClass):
 
 
 class OptionValueManagement(MetaApiViewClass):
+
     @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def get(self, request):

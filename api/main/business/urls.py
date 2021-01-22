@@ -1,6 +1,6 @@
 from main.utils import Helpers
-from .views import (ProductManagement, CategoryManagement,
-                    ProductAttachmentManagement, OptionManagement, OptionValueManagement)
+from .views import ProductManagement, CategoryManagement, \
+ProductAttachmentManagement, OptionManagement, OptionValueManagement
 
 
 gen_url = Helpers.generate_url_item
