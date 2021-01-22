@@ -94,6 +94,24 @@ schema = {
             'required': ['followed_user_id'],
         },
     },
+    'follow-user': {
+        'POST': {
+            'type': 'object',
+            'properties': {
+                'banned_user_id': {'type': 'integer'},
+            },
+            'additionalProperties': False,
+            'required': ['banned_user_id'],
+        },
+        'DELETE': {
+            'type': 'object',
+            'properties': {
+                'banned_user_id': {'type': 'integer'},
+            },
+            'additionalProperties': False,
+            'required': ['banned_user_id'],
+        },
+    },
     'category': {
         'POST': {
             'type': 'object',
