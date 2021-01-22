@@ -6,7 +6,7 @@ from .models import User, OTP, City, SalesMan, JobCategory, BlackList, Following
 
 class FindUserByMobile(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
+    # @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -18,7 +18,7 @@ class FindUserByMobile(MetaApiViewClass):
             check_deletion = not data.get('insert')
             self.check_user(user, raise_error=True, check_deletion=check_deletion, extra_messages=[5])
 
-            deleted_account_limit_hours = data.get('deleted_account_limit_hours')
+            deleted_account_limit_hours = int(data.get('deleted_account_limit_hours'))
             if user.deleted_date and deleted_account_limit_hours:
                 now = self.get_current_utc_time()
                 if (now - user.deleted_date).seconds <= (deleted_account_limit_hours * 60 * 60):
