@@ -4,7 +4,7 @@ from django.db import models
 from django.core.validators import validate_image_file_extension, RegexValidator
 
 
-generate_table_name = utils.Helpers.generate_table_name('business')
+generate_table_name = utils.Helpers.generate_table_name('root')
 
 
 def generate_decimal_uid():
