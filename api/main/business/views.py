@@ -140,3 +140,70 @@ class ProductManagement(MetaApiViewClass):
         product.delete()
 
         return self.success(message=[15])
+
+
+#  ToDO
+class ProductAttachmentManagement(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
+    def get(self, request):
+        pass
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def post(self, request):
+        pass
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def put(self, request):
+        pass
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def delete(self, request):
+        pass
+
+
+class OptionManagement(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
+    def get(self, request):
+        pass
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def post(self, request):
+        pass
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def put(self, request):
+        pass
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def delete(self, request):
+        pass
+
+
+class OptionValueManagement(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
+    def get(self, request):
+        pass
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def post(self, request):
+        pass
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def put(self, request):
+        pass
+
+    @MetaApiViewClass.generic_decor(protected=True)
+    @JsonValidation.validate
+    def delete(self, request):
+        pass

@@ -69,7 +69,7 @@ class User(utils.AbstractModel):
     score = models.IntegerField(default=100)
     picture = models.BinaryField(null=True, validators=[validate_image_file_extension])
     is_deleted = models.BooleanField(default=False)
-    deleted_date = models.DateTimeField(blank=True, null=True)
+    deleted_date = models.DateTimeField(default=None, blank=True, null=True)
 
     class Meta:
         db_table = generate_table_name('user')
