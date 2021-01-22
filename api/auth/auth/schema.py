@@ -5,7 +5,7 @@ schema = {
             'properties': {
                 'mobile': {'type': 'string', 'pattern': r'^09\d{9}$'},
                 'insert': {'type': 'boolean'},
-                'deleted_account_limit_hours': {'type': 'string', 'minimum': 1},
+                'deleted_account_limit_hours': {'type': 'integer', 'minimum': 1},
             },
             'additionalProperties': False,
             'required': ['mobile'],

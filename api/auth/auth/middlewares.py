@@ -19,7 +19,6 @@ def fix_dict_encode(obj=None, return_json=False):
 
             if val.isdigit():
                 obj[key] = unidecode(val)
-                continue
 
             try:
                 obj[key] = json.loads(val)
