@@ -5,6 +5,7 @@ from django.core.validators import validate_image_file_extension, RegexValidator
 
 
 generate_table_name = utils.Helpers.generate_table_name('root')
+mobile_regex = RegexValidator(regex=r'^09\d{9}$', message='Enter a valid phone number')
 
 
 def generate_decimal_uid():
@@ -60,10 +61,7 @@ class JobCategory(utils.AbstractModel):
 
 class User(utils.AbstractModel):
     uid = models.CharField(max_length=8, unique=True, default=generate_hex_uid)
-    mobile = models.CharField(
-        max_length=13,
-        validators=[RegexValidator(regex=r'^09\d{9}$', message='Enter a valid phone number')]
-    )
+    mobile = models.CharField(max_length=13, validators=[mobile_regex])
     nick_name = models.CharField(max_length=50)
     email = models.EmailField(null=True, blank=True)
     score = models.IntegerField(default=100)

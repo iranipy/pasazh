@@ -171,14 +171,16 @@ class CustomResponse:
         if message is None:
             message = status['message']
 
+        str_message = list(filter(lambda m: isinstance(m, str), message))
+
         result = {
             'message': [messages[m] for m in message if isinstance(m, int)],
             'state': state,
             'data': data,
         }
 
-        if len(result['message']) == 0 and len(message) > 0:
-            result['message'] = message
+        if len(result['message']) != len(message) and len(str_message) > 0:
+            result['message'] += str_message
 
         return Response(data=result, status=status['stat'])
 

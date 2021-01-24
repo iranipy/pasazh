@@ -1,10 +1,9 @@
-import requests
-import fastjsonschema
+import time
 import datetime
+import isodate
+import fastjsonschema
 
-from os import getenv
 from functools import wraps
-from random import randint
 from rest_framework.response import Response
 from rest_framework import status as stat
 from rest_framework.views import APIView
@@ -19,7 +18,6 @@ from .schema import schema
 class AbstractModel(models.Model):
     created_at = models.DateTimeField(default=datetime.datetime.utcnow)
     modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
-    is_active = models.BooleanField(default=True)
 
     class Meta:
         abstract = True
@@ -38,10 +36,21 @@ class Helpers:
         return model_to_dict(instance)
 
     @staticmethod
-    def generate_rand_decimal(length: int) -> str:
-        _min = int(pow(10, length - 1))
-        _max = int(pow(10, length) - 1)
-        return str(randint(_min, _max))
+    def parse_iso_date(iso_time, part='date_time') -> datetime:
+        dt = isodate.parse_datetime(iso_time)
+        if part == 'date':
+            dt = dt.date()
+        elif part == 'time':
+            dt = dt.time()
+        return dt
+
+    @staticmethod
+    def get_current_time_in_milliseconds() -> int:
+        return int(round(time.time()) * 1000)
+
+    @staticmethod
+    def get_current_utc_time() -> datetime:
+        return datetime.datetime.utcnow()
 
     @staticmethod
     def generate_url_item(url, view):
@@ -126,83 +135,12 @@ class CustomResponse:
         return cls.__generate_response(state='internal_error', **kwargs)
 
 
-class CustomRequest:
-
-    __base_url = f'http://{getenv("HOST")}:{getenv("AUTH_PORT")}'
+class MetaApiViewClass(APIView, CustomResponse, Helpers):
 
     @classmethod
-    def __generate_url(cls, url):
-        return f'{cls.__base_url}{url}'
-
-    @staticmethod
-    def __handle_request(response, return_data):
-        response_json = response.json()
-        data = response_json.get('data')
-        if return_data and data:
-            return data
-        raise CustomResponse.CustomResponseException(**response_json)
-
-    @classmethod
-    def get_req(cls, url, params=None, return_data=False, **kwargs):
-        if params is None:
-            params = {}
-        response = requests.get(cls.__generate_url(url), params, **kwargs)
-        return cls.__handle_request(response, return_data)
-
-    @classmethod
-    def post_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
-        if data is None:
-            data = {}
-        response = requests.post(cls.__generate_url(url), data, json_str, **kwargs)
-        return cls.__handle_request(response, return_data)
-
-    @classmethod
-    def put_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
-        if data is None:
-            data = {}
-        response = requests.put(cls.__generate_url(url), data, json_str, **kwargs)
-        return cls.__handle_request(response, return_data)
-
-    @classmethod
-    def del_req(cls, url, params=None, return_data=False, **kwargs):
-        if params is None:
-            params = {}
-        response = requests.delete(cls.__generate_url(url), params=params, **kwargs)
-        return cls.__handle_request(response, return_data)
-
-
-class MetaApiViewClass(APIView, CustomResponse, CustomRequest, Helpers):
-
-    __auth_token_key = getenv('AUTH_TOKEN_KEY')
-
-    token_info = None
-    user = None
-
-    @classmethod
-    def generic_decor(cls, protected=False, return_token_info=False, check_user=False):
+    def generic_decor(cls):
         def decorator(func):
             def wrapper(*args, **kwargs):
-                if protected:
-                    request = args[1]
-                    auth_token_key = cls.__auth_token_key
-                    token = request.headers.get(auth_token_key)
-
-                    params = {
-                        "return_token_info": return_token_info,
-                        "check_user": check_user,
-                    }
-
-                    res = cls.get_req(
-                        '/find-user-by-token/', params=params, return_data=True,
-                        headers={auth_token_key: token}
-                    )
-
-                    cls.token_info = res.get('token_info')
-                    cls.user = res.get('user')
-
-                    if cls.user is None:
-                        return cls.not_found()
-
                 try:
                     return func(*args, **kwargs)
                 except cls.NotFound as e:

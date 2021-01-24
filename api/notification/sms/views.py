@@ -1,19 +1,37 @@
-from sms import api
-from .utils import MetaApiViewClass
+from notification.utils import MetaApiViewClass, JsonValidation
+
+from os import getenv
+from kavenegar import KavenegarAPI, APIException, HTTPException
+
+from .models import SentSms
 
 
 class SendSMS(MetaApiViewClass):
-    @MetaApiViewClass.generic_decor
+
+    __sms_api_key = getenv("SMS_API_KEY")
+
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
     def post(self, request):
         data = self.request.data
-        sender = data['sender']
-        receiver = data['receiver']
-        message = data['msg']
-        params = {
-            'sender': sender,
-            'receptor': receiver,
-            'message': message
-        }
-        response = api.sms_send(params)
+        api = KavenegarAPI(self.__sms_api_key)
 
-        return self.success(data=response)
+        try:
+            res = api.sms_send(data)
+            if not isinstance(res, list) or len(res) == 0:
+                raise APIException
+
+            for r in res:
+                r['message_id'] = r.pop('messageid')
+                r['status_text'] = r.pop('statustext')
+                r['sent_date'] = r.pop('date')
+
+                SentSms.objects.create(**r).save()
+
+                if r['status'] != 1:
+                    raise APIException
+
+        except (APIException, HTTPException) as e:
+            return self.internal_error(message=[8, str(e)])
+
+        return self.success(data=res, message=[7])
