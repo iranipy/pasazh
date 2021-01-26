@@ -107,7 +107,7 @@ class ConfirmCode(MetaApiViewClass):
 
         otp.try_count += 1
 
-        if str(data['confirm_code']) != otp.code:
+        if data['confirm_code'] != otp.code:
             otp.save()
             return self.bad_request(message=[13])
 

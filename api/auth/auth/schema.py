@@ -39,7 +39,7 @@ schema = {
             'type': 'object',
             'properties': {
                 'user_id': {'type': 'integer'},
-                'confirm_code': {'type': 'integer', 'minLength': 1},
+                'confirm_code': {'type': 'string', 'minLength': 1},
                 'confirm_code_try_count_limit': {'type': 'integer', 'minimum': 1},
             },
             'additionalProperties': False,

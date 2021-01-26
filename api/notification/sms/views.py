@@ -2,6 +2,7 @@ from notification.utils import MetaApiViewClass, JsonValidation
 
 from os import getenv
 from kavenegar import KavenegarAPI, APIException, HTTPException
+
 from .models import SentSms
 
 
@@ -16,7 +17,6 @@ class SendSMS(MetaApiViewClass):
         api = KavenegarAPI(self.__sms_api_key)
 
         try:
-            print(data)
             res = api.sms_send(data)
             if not isinstance(res, list) or len(res) == 0:
                 raise APIException

@@ -136,11 +136,11 @@ class OTPRecord:
 
 
 class CustomRequest:
-    __base_url = f'http://{getenv("HOST")}:{getenv("NOTIFICATION_PORT")}'
+
+    __base_url = f'http://{getenv("HOST")}:{getenv("AUTH_PORT")}'
 
     @classmethod
-    def __generate_url(cls, url, action):
-
+    def __generate_url(cls, url):
         return f'{cls.__base_url}{url}'
 
     @staticmethod
@@ -151,12 +151,12 @@ class CustomRequest:
             return data
         raise CustomResponse.CustomResponseException(**response_json)
 
-    # @classmethod
-    # def get_req(cls, url, params=None, return_data=False, **kwargs):
-    #     if params is None:
-    #         params = {}
-    #     response = requests.get(cls.__generate_url(url), params, **kwargs)
-    #     return cls.__handle_request(response, return_data)
+    @classmethod
+    def get_req(cls, url, params=None, return_data=False, **kwargs):
+        if params is None:
+            params = {}
+        response = requests.get(cls.__generate_url(url), params, **kwargs)
+        return cls.__handle_request(response, return_data)
 
     @classmethod
     def post_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
@@ -165,19 +165,19 @@ class CustomRequest:
         response = requests.post(cls.__generate_url(url), data, json_str, **kwargs)
         return cls.__handle_request(response, return_data)
 
-    # @classmethod
-    # def put_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
-    #     if data is None:
-    #         data = {}
-    #     response = requests.put(cls.__generate_url(url), data, json_str, **kwargs)
-    #     return cls.__handle_request(response, return_data)
-    #
-    # @classmethod
-    # def del_req(cls, url, params=None, return_data=False, **kwargs):
-    #     if params is None:
-    #         params = {}
-    #     response = requests.delete(cls.__generate_url(url), params=params, **kwargs)
-    #     return cls.__handle_request(response, return_data)
+    @classmethod
+    def put_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
+        if data is None:
+            data = {}
+        response = requests.put(cls.__generate_url(url), data, json_str, **kwargs)
+        return cls.__handle_request(response, return_data)
+
+    @classmethod
+    def del_req(cls, url, params=None, return_data=False, **kwargs):
+        if params is None:
+            params = {}
+        response = requests.delete(cls.__generate_url(url), params=params, **kwargs)
+        return cls.__handle_request(response, return_data)
 
 
 class CustomResponse:
@@ -307,7 +307,7 @@ class JsonValidation:
             request = args[1]
             obj_to_validate = request.data
 
-            curr_schema = cls.find_schema(request.path_info.replace('/', ''), request.method)
+            curr_schema = cls.find_schema(request.path_info[1:], request.method)
             if not curr_schema:
                 return f(*args, **kwargs)
 

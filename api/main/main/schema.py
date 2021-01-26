@@ -1,5 +1,5 @@
 schema = {
-    'login': {
+    'auth/login': {
         'POST': {
             'type': 'object',
             'properties': {
@@ -10,7 +10,7 @@ schema = {
             'required': ['mobile'],
         },
     },
-    'confirm-code': {
+    'auth/confirm-code': {
         'POST': {
             'type': 'object',
             'properties': {
@@ -21,19 +21,7 @@ schema = {
             'required': ['mobile', 'confirm_code'],
         },
     },
-    'update-profile': {
-        'PUT': {
-            'type': 'object',
-            'properties': {
-                'nick_name': {'type': 'string', 'minLength': 3, 'maxLength': 50},
-                'email': {'type': 'string', 'format': 'email'},
-                'picture': {'type': 'string'},
-            },
-            'additionalProperties': False,
-            'required': ['nick_name'],
-        },
-    },
-    'salesman-profile': {
+    'salesman/profile': {
         'POST': {
             'type': 'object',
             'properties': {
@@ -76,7 +64,19 @@ schema = {
             'additionalProperties': False,
         },
     },
-    'follow-user': {
+    'user/update-profile': {
+        'PUT': {
+            'type': 'object',
+            'properties': {
+                'nick_name': {'type': 'string', 'minLength': 3, 'maxLength': 50},
+                'email': {'type': 'string', 'format': 'email'},
+                'picture': {'type': 'string'},
+            },
+            'additionalProperties': False,
+            'required': ['nick_name'],
+        },
+    },
+    'user/follow': {
         'POST': {
             'type': 'object',
             'properties': {
@@ -94,7 +94,7 @@ schema = {
             'required': ['followed_user_id'],
         },
     },
-    'follow-user': {
+    'user/block': {
         'POST': {
             'type': 'object',
             'properties': {
@@ -112,7 +112,7 @@ schema = {
             'required': ['banned_user_id'],
         },
     },
-    'category': {
+    'business/category': {
         'POST': {
             'type': 'object',
             'properties': {
@@ -141,7 +141,7 @@ schema = {
             'required': ['category_id'],
         },
     },
-    'product': {
+    'business/product': {
         'GET': {
             'type': 'object',
             'properties': {
@@ -182,6 +182,46 @@ schema = {
             },
             'additionalProperties': False,
             'required': ['category_id'],
+        },
+    },
+    'business/product-attachment': {
+        'GET': {
+            'type': 'object',
+            'properties': {
+                'product_uid': {'type': 'integer'},
+            },
+            'additionalProperties': False,
+            'required': ['product_uid'],
+        },
+        'POST': {
+            'type': 'object',
+            'properties': {
+                'product_uid': {'type': 'integer'},
+                'type': {'type': 'string'},
+                'content': {'type': 'string'},
+                'size': {'type': 'integer'},
+                'description': {'type': 'string'},
+            },
+            'additionalProperties': False,
+            'required': ['product_uid', 'type', 'content', 'size', 'description'],
+        },
+        'DELETE': {
+            'type': 'object',
+            'properties': {
+                'product_uid': {'type': 'integer'},
+            },
+            'additionalProperties': False,
+            'required': ['product_uid'],
+        },
+    },
+    'business/option': {
+        'GET': {
+            'type': 'object',
+            'properties': {
+                'product_uid': {'type': 'integer'},
+            },
+            'additionalProperties': False,
+            'required': ['product_uid'],
         },
     },
 }

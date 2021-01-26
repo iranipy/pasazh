@@ -11,8 +11,8 @@ class CategoryManagement(MetaApiViewClass):
 
         if len(categories) == 0:
             return self.not_found(message=[13])
-        res = list(map(self.serialize, categories))
-        return self.success(data={'categories': res})
+
+        return self.success(data={'categories': list(map(self.serialize, categories))})
 
     @MetaApiViewClass.generic_decor(protected=True)
     @JsonValidation.validate
@@ -71,8 +71,8 @@ class ProductManagement(MetaApiViewClass):
 
         if len(products) == 0:
             return self.not_found(message=[16])
-        res = list(map(self.serialize, products))
-        return self.success(data={'products': res})
+
+        return self.success(data={'products': list(map(self.serialize, products))})
 
     @MetaApiViewClass.generic_decor(protected=True)
     @JsonValidation.validate
@@ -148,39 +148,33 @@ class ProductAttachmentManagement(MetaApiViewClass):
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
+
         try:
             product = Product.objects.get(data['product_uid'])
         except Product.DoesNotExist:
             return self.not_found(message=[5])
-        product_att = ProductAttachment.objects.filter(product)
-        res = list(map(self.serialize, product_att))
-        return self.success(data={'product_attachment': res})
+
+        product_attachments = ProductAttachment.objects.filter(product)
+
+        return self.success(data={'product_attachment': list(map(self.serialize, product_attachments))})
 
     @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
-        try:
-            product = Product.objects.get(uid=data['product_uid'])
-        except Product.DoesNotExist:
-            return self.not_found(message=[5])
-        new_attachment = ProductAttachment.objects.create(product=product, type=data['type'], content=data['content'],
-                                                          size=data['size'], description=data['description'])
-        new_attachment.save()
-        return self.success(message=[17])
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
-    @JsonValidation.validate
-    def put(self, request):
-        data = self.request.data
         try:
             product = Product.objects.get(uid=data['product_uid'])
         except Product.DoesNotExist:
             return self.not_found(message=[5])
-        product_owner_uid = product.uid.split('-')[0]
-        if self.user['uid'] != product_owner_uid:
-            return self.bad_request(message=[18])
-        product_att = ProductAttachment.objects.filter(product=product)
+
+        new_attachment = ProductAttachment.objects.create(
+            product=product, type=data['type'], content=data['content'],
+            size=data['size'], description=data['description']
+        )
+        new_attachment.save()
+
+        return self.success(message=[17])
 
     @MetaApiViewClass.generic_decor(protected=True)
     @JsonValidation.validate
@@ -194,10 +188,15 @@ class OptionManagement(MetaApiViewClass):
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
-        product = Product.objects.filter(uid=data['product_uid'])
+
+        try:
+            product = Product.objects.get(uid=data['product_uid'])
+        except Product.DoesNotExist:
+            return self.not_found(message=[5])
+
         options = Option.objects.filter(product=product)
-        res = list(map(self.serialize, options))
-        return self.success(data={'product_options': res})
+
+        return self.success(data={'product_options': list(map(self.serialize, options))})
 
     @MetaApiViewClass.generic_decor(protected=True)
     @JsonValidation.validate
