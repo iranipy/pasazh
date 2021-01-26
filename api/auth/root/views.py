@@ -84,6 +84,7 @@ class CreateOtp(MetaApiViewClass):
         otp = OTPRecord.create_otp_fields(data['confirm_code_expire_minutes'], data['otp_code_length'])
         OTP.objects.create(user=self.user, **otp).save()
 
+        self.post_req('/sms/send-sms/')
         return self.success(message=[10], data={'code': otp['code']})
 
 
@@ -106,7 +107,7 @@ class ConfirmCode(MetaApiViewClass):
 
         otp.try_count += 1
 
-        if data['confirm_code'] != otp.code:
+        if str(data['confirm_code']) != otp.code:
             otp.save()
             return self.bad_request(message=[13])
 

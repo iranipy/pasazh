@@ -96,13 +96,13 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 
 # Extra settings
-APPEND_SLASH = False
+APPEND_SLASH = True
 
 EMAIL_HOST = getenv('EMAIL_HOST')
 EMAIL_USE_TLS = True

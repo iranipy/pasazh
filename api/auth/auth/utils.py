@@ -3,6 +3,7 @@ import jwt
 import datetime
 import isodate
 import fastjsonschema
+import requests
 
 import root.models as root_models
 
@@ -100,7 +101,6 @@ class Helpers:
 
 
 class Security:
-
     __secret_key = getenv('SECRET_KEY')
 
     @staticmethod
@@ -135,8 +135,52 @@ class OTPRecord:
         }
 
 
-class CustomResponse:
+class CustomRequest:
+    __base_url = f'http://{getenv("HOST")}:{getenv("NOTIFICATION_PORT")}'
 
+    @classmethod
+    def __generate_url(cls, url, action):
+
+        return f'{cls.__base_url}{url}'
+
+    @staticmethod
+    def __handle_request(response, return_data):
+        response_json = response.json()
+        data = response_json.get('data')
+        if return_data and data:
+            return data
+        raise CustomResponse.CustomResponseException(**response_json)
+
+    # @classmethod
+    # def get_req(cls, url, params=None, return_data=False, **kwargs):
+    #     if params is None:
+    #         params = {}
+    #     response = requests.get(cls.__generate_url(url), params, **kwargs)
+    #     return cls.__handle_request(response, return_data)
+
+    @classmethod
+    def post_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
+        if data is None:
+            data = {}
+        response = requests.post(cls.__generate_url(url), data, json_str, **kwargs)
+        return cls.__handle_request(response, return_data)
+
+    # @classmethod
+    # def put_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
+    #     if data is None:
+    #         data = {}
+    #     response = requests.put(cls.__generate_url(url), data, json_str, **kwargs)
+    #     return cls.__handle_request(response, return_data)
+    #
+    # @classmethod
+    # def del_req(cls, url, params=None, return_data=False, **kwargs):
+    #     if params is None:
+    #         params = {}
+    #     response = requests.delete(cls.__generate_url(url), params=params, **kwargs)
+    #     return cls.__handle_request(response, return_data)
+
+
+class CustomResponse:
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):
@@ -205,8 +249,7 @@ class CustomResponse:
         return cls.__generate_response(state='internal_error', **kwargs)
 
 
-class MetaApiViewClass(APIView, CustomResponse, Helpers):
-
+class MetaApiViewClass(APIView, CustomResponse, Helpers, CustomRequest):
     user = None
 
     @classmethod
