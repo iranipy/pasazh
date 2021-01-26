@@ -38,10 +38,10 @@ class Helpers:
         return model_to_dict(instance)
 
     @staticmethod
-    def generate_rand_decimal(length: int) -> str:
+    def generate_rand_decimal(length: int) -> int:
         _min = int(pow(10, length - 1))
         _max = int(pow(10, length) - 1)
-        return str(randint(_min, _max))
+        return randint(_min, _max)
 
     @staticmethod
     def generate_url_item(url, view):

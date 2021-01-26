@@ -82,10 +82,10 @@ class Helpers:
         return datetime.datetime.utcnow()
 
     @staticmethod
-    def generate_rand_decimal(length: int) -> str:
+    def generate_rand_decimal(length: int) -> int:
         _min = int(pow(10, length - 1))
         _max = int(pow(10, length) - 1)
-        return str(randint(_min, _max))
+        return randint(_min, _max)
 
     @staticmethod
     def generate_url_item(url, view):
@@ -108,7 +108,7 @@ class Security:
         return token_hex(length)
 
     @staticmethod
-    def generate_otp(length: int) -> str:
+    def generate_otp(length: int) -> int:
         return Helpers.generate_rand_decimal(length)
 
     @classmethod
