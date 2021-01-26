@@ -113,7 +113,7 @@ class SalesMan(utils.AbstractModel):
 
 
 class OTP(utils.AbstractModel):
-    code = models.CharField(max_length=16)
+    code = models.IntegerField()
     expire = models.BigIntegerField()
     try_count = models.IntegerField(default=0)
     user = models.ForeignKey(User, on_delete=models.CASCADE)

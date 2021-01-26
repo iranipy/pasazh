@@ -15,7 +15,7 @@ schema = {
             'type': 'object',
             'properties': {
                 'mobile': {'type': 'string', 'pattern': r'^09\d{9}$'},
-                'confirm_code': {'type': 'string', 'minLength': 1},
+                'confirm_code': {'type': 'integer'},
             },
             'additionalProperties': False,
             'required': ['mobile', 'confirm_code'],
