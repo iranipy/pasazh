@@ -259,23 +259,27 @@ class MetaApiViewClass(APIView, CustomResponse, Helpers, CustomRequest):
                 request = args[1]
                 user_id = request.data.get('user_id')
 
-                if user_id_in_params:
-                    user_id = request.query_params.get('user_id')
-
-                if user_by_id and user_id:
-                    try:
-                        user = root_models.User.objects.get(id=user_id)
-                    except root_models.User.DoesNotExist:
-                        return cls.not_found(message=[8])
-
-                    cls.check_user(user)
-
-                    cls.user = user
-                    if serialize:
-                        cls.user = cls.serialize(user)
-
                 try:
+                    if user_id_in_params:
+                        user_id = request.query_params.get('user_id')
+
+                    if user_by_id:
+                        if not user_id:
+                            return cls.not_found(message=[8])
+
+                        try:
+                            user = root_models.User.objects.get(id=user_id)
+                        except root_models.User.DoesNotExist:
+                            return cls.not_found(message=[8])
+
+                        cls.check_user(user)
+
+                        cls.user = user
+                        if serialize:
+                            cls.user = cls.serialize(user)
+
                     return func(*args, **kwargs)
+
                 except cls.NotFound as e:
                     return cls.not_found(message=e.message, data=e.data)
                 except cls.BadRequest as e:
