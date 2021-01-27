@@ -37,15 +37,13 @@ class FindUserByMobile(MetaApiViewClass):
 
 
 class FindUserByToken(MetaApiViewClass):
-
     __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
     @MetaApiViewClass.generic_decor()
     def get(self, request):
         data = self.request.query_params
-        token = request.headers.get(self.__auth_token_key)
+        token = self.request.headers.get(self.__auth_token_key)
         token_info = Security.decode_jwt_token(token)
-
         if not token_info or not token_info.get('user_id'):
             return self.bad_request(message=[9])
 
@@ -84,7 +82,7 @@ class CreateOtp(MetaApiViewClass):
         otp = OTPRecord.create_otp_fields(data['confirm_code_expire_minutes'], data['otp_code_length'])
         OTP.objects.create(user=self.user, **otp).save()
 
-        self.post_req('/sms/send-sms/')
+        # self.post_req('/sms/send-sms/', json_str={'receptor': self.user.mobile, 'message': otp['code']})
         return self.success(message=[10], data={'code': otp['code']})
 
 
@@ -93,6 +91,7 @@ class ConfirmCode(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(user_by_id=True)
     @JsonValidation.validate
     def post(self, request):
+        print(self.request.data)
         data = self.request.data
 
         try:
@@ -107,7 +106,7 @@ class ConfirmCode(MetaApiViewClass):
 
         otp.try_count += 1
 
-        if data['confirm_code'] != otp.code:
+        if str(data['confirm_code']) != otp.code:
             otp.save()
             return self.bad_request(message=[13])
 
@@ -144,6 +143,14 @@ class UserProfile(MetaApiViewClass):
 
 
 class SalesManView(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
+    @JsonValidation.validate
+    def get(self, request):
+        try:
+            sales_man = SalesMan.objects.filter(user=self.user)[0]
+        except IndexError:
+            return self.not_found(message=[21])
+        return self.success(data=self.serialize(sales_man))
 
     @MetaApiViewClass.generic_decor(user_by_id=True)
     @JsonValidation.validate
@@ -196,6 +203,16 @@ class SalesManView(MetaApiViewClass):
         salesman.save()
 
         return self.success(message=[22])
+
+    @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
+    @JsonValidation.validate
+    def delete(self, request):
+        try:
+            sales_man = SalesMan.objects.filter(user=self.user)[0]
+        except IndexError:
+            return self.not_found(message=[21])
+        sales_man.delete()
+        return self.success(message=[35])
 
 
 class Block(MetaApiViewClass):

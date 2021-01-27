@@ -186,22 +186,28 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest, Helpers):
                     request = args[1]
                     auth_token_key = cls.__auth_token_key
                     token = request.headers.get(auth_token_key)
-
+                    bool_check = {
+                        True: 'true',
+                        False: 'false'
+                    }  # temporary solution
                     params = {
-                        "return_token_info": return_token_info,
-                        "check_user": check_user,
+                        "return_token_info": bool_check[return_token_info],
+                        "check_user": bool_check[check_user],
                     }
 
                     res = cls.get_req(
                         '/find-user-by-token/', params=params, return_data=True,
                         headers={auth_token_key: token}
                     )
-
                     cls.token_info = res.get('token_info')
                     cls.user = res.get('user')
+                    if return_token_info:
+                        return cls.success(data={'token': cls.token_info})
 
-                    if cls.user is None:
-                        return cls.not_found()
+                    if check_user and not cls.user:
+                        return cls.not_found(messages=[19])
+                    if not all((check_user, return_token_info)):
+                        return cls.success(data={'data': res})
 
                 try:
                     return func(*args, **kwargs)

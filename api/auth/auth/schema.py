@@ -68,6 +68,14 @@ schema = {
         },
     },
     'salesman-profile': {
+        'GET': {
+            'type': 'object',
+            'properties': {
+                'user_id': {'type': 'integer'}
+            },
+            'additionalProperties': False,
+            'required': ['user_id']
+        },
         'POST': {
             'type': 'object',
             'properties': {
@@ -111,6 +119,14 @@ schema = {
             },
             'additionalProperties': False,
             'required': ['user_id'],
+        },
+        'DELETE': {
+            'type': 'object',
+            'properties': {
+                'user_id': {'type': 'integer'}
+            },
+            'additionalProperties': False,
+            'required': ['user_id']
         },
     },
     'block-user': {

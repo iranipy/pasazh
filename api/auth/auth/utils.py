@@ -137,7 +137,7 @@ class OTPRecord:
 
 class CustomRequest:
 
-    __base_url = f'http://{getenv("HOST")}:{getenv("AUTH_PORT")}'
+    __base_url = f'http://{getenv("HOST")}:{getenv("NOTIFICATION_PORT")}'
 
     @classmethod
     def __generate_url(cls, url):
