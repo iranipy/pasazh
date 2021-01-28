@@ -38,10 +38,12 @@ class Helpers:
     @staticmethod
     def parse_iso_date(iso_time, part='date_time') -> datetime:
         dt = isodate.parse_datetime(iso_time)
+
         if part == 'date':
             dt = dt.date()
         elif part == 'time':
             dt = dt.time()
+
         return dt
 
     @staticmethod
@@ -87,17 +89,17 @@ class CustomResponse:
             super().__init__('bad_request', message, data)
 
     @staticmethod
-    def __get_status(state: str):
+    def get_status(state: str):
         return {
-            'success': {'stat': stat.HTTP_200_OK, 'message': [1]},
-            'not_found': {'stat': stat.HTTP_404_NOT_FOUND, 'message': [2]},
-            'bad_request': {'stat': stat.HTTP_400_BAD_REQUEST, 'message': [3]},
-            'internal_error': {'stat': stat.HTTP_500_INTERNAL_SERVER_ERROR, 'message': [4]},
+            'success': {'state': stat.HTTP_200_OK, 'message': [1]},
+            'not_found': {'state': stat.HTTP_404_NOT_FOUND, 'message': [2]},
+            'bad_request': {'state': stat.HTTP_400_BAD_REQUEST, 'message': [3]},
+            'internal_error': {'state': stat.HTTP_500_INTERNAL_SERVER_ERROR, 'message': [4]},
         }[state]
 
     @classmethod
     def __generate_response(cls, state='success', message=None, data=None):
-        status = cls.__get_status(state)
+        status = cls.get_status(state)
         if message is None:
             message = status['message']
 
@@ -112,7 +114,7 @@ class CustomResponse:
         if len(result['message']) != len(message) and len(str_message) > 0:
             result['message'] += str_message
 
-        return Response(data=result, status=status['stat'])
+        return Response(data=result, status=status['state'])
 
     @classmethod
     def general_response(cls, **kwargs):
@@ -135,7 +137,7 @@ class CustomResponse:
         return cls.__generate_response(state='internal_error', **kwargs)
 
 
-class MetaApiViewClass(APIView, CustomResponse, Helpers):
+class MetaApiViewClass(APIView, Helpers, CustomResponse):
 
     @classmethod
     def generic_decor(cls):

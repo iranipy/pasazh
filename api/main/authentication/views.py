@@ -14,14 +14,12 @@ class Login(MetaApiViewClass):
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
-        bool_check = {
-            True: 'true',
-            False: 'false'
-        }  # temporary solution
+
         user = self.get_req('/find-user-by-mobile/', params={
-            'mobile': data['mobile'], 'insert': bool_check[data['insert']],
+            'mobile': data['mobile'], 'insert': True,
             'deleted_account_limit_hours': self.__deleted_account_limit_hours
         }, return_data=True)
+
         self.post_req('/create-otp/', json_str={
             'user_id': int(user['id']),
             'login_attempt_limit_hour': int(self.__login_attempt_limit_hour),
@@ -56,7 +54,7 @@ class ConfirmCode(MetaApiViewClass):
 
 class Verify(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=False, return_token_info=False)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     def get(self, request):
 
         return self.success(data={'user': self.user})

@@ -1,8 +1,10 @@
 from auth.utils import Helpers
 from .views import FindUserByMobile, FindUserByToken, CreateOtp, ConfirmCode, \
-    UserProfile, SalesManView, Block, Follow
+UserProfile, SalesManView, Block, Follow
+
 
 gen_url = Helpers.generate_url_item
+
 
 urlpatterns = [
     gen_url('find-user-by-mobile', FindUserByMobile),

@@ -1,10 +1,10 @@
 from main.utils import MetaApiViewClass, JsonValidation
-from .models import Product, Category, ProductAttachment, Option, OptionValue
+from .models import Product, Category, ProductAttachment, Option
 
 
 class CategoryManagement(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def get(self, request):
         categories = Category.objects.filter(is_public=True) | Category.objects.filter(user_uid=self.user['uid'])
@@ -14,7 +14,7 @@ class CategoryManagement(MetaApiViewClass):
 
         return self.success(data={'categories': list(map(self.serialize, categories))})
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -27,7 +27,7 @@ class CategoryManagement(MetaApiViewClass):
             Category.objects.create(**data).save()
             return self.success(message=[8])
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data
@@ -45,7 +45,7 @@ class CategoryManagement(MetaApiViewClass):
 
         return self.success(message=[10])
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         data = self.request.query_params
@@ -62,7 +62,7 @@ class CategoryManagement(MetaApiViewClass):
 
 class ProductManagement(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -74,7 +74,7 @@ class ProductManagement(MetaApiViewClass):
 
         return self.success(data={'products': list(map(self.serialize, products))})
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -96,7 +96,7 @@ class ProductManagement(MetaApiViewClass):
 
             return self.success(message=['PRODUCT_CREATED'])
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data
@@ -124,7 +124,7 @@ class ProductManagement(MetaApiViewClass):
 
         return self.success(message=[14])
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         data = self.request.query_params
@@ -144,7 +144,7 @@ class ProductManagement(MetaApiViewClass):
 
 class ProductAttachmentManagement(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -176,7 +176,7 @@ class ProductAttachmentManagement(MetaApiViewClass):
 
         return self.success(message=[17])
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         pass
@@ -184,7 +184,7 @@ class ProductAttachmentManagement(MetaApiViewClass):
 
 class OptionManagement(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -198,17 +198,17 @@ class OptionManagement(MetaApiViewClass):
 
         return self.success(data={'product_options': list(map(self.serialize, options))})
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def post(self, request):
         pass
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def put(self, request):
         pass
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         pass
@@ -216,22 +216,22 @@ class OptionManagement(MetaApiViewClass):
 
 class OptionValueManagement(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def get(self, request):
         pass
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def post(self, request):
         pass
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def put(self, request):
         pass
 
-    @MetaApiViewClass.generic_decor(protected=True)
+    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         pass

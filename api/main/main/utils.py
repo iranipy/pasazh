@@ -56,6 +56,59 @@ class Helpers:
         return inner
 
 
+class CustomRequest:
+
+    __base_url = f'http://{getenv("HOST")}:{getenv("AUTH_PORT")}'
+
+    @classmethod
+    def __generate_url(cls, url):
+        return f'{cls.__base_url}{url}'
+
+    @staticmethod
+    def __handle_request(response, return_data=False, check_success=False):
+        response_json = response.json()
+
+        data = response_json.get('data')
+        state = response_json.get('state')
+
+        status = state and CustomResponse.get_status(state)
+        if check_success and status:
+            return state and status['state'] == stat.HTTP_200_OK
+
+        if return_data and data:
+            return data
+
+        raise CustomResponse.CustomResponseException(**response_json)
+
+    @classmethod
+    def get_req(cls, url, params=None, return_data=False, check_success=False, **kwargs):
+        if params is None:
+            params = {}
+        response = requests.get(cls.__generate_url(url), params, **kwargs)
+        return cls.__handle_request(response, return_data, check_success)
+
+    @classmethod
+    def post_req(cls, url, data=None, return_data=False, check_success=False, json_str='', **kwargs):
+        if data is None:
+            data = {}
+        response = requests.post(cls.__generate_url(url), data, json_str, **kwargs)
+        return cls.__handle_request(response, return_data, check_success)
+
+    @classmethod
+    def put_req(cls, url, data=None, return_data=False, check_success=False, json_str='', **kwargs):
+        if data is None:
+            data = {}
+        response = requests.put(cls.__generate_url(url), data, json_str, **kwargs)
+        return cls.__handle_request(response, return_data, check_success)
+
+    @classmethod
+    def del_req(cls, url, params=None, return_data=False, check_success=False, **kwargs):
+        if params is None:
+            params = {}
+        response = requests.delete(cls.__generate_url(url), params=params, **kwargs)
+        return cls.__handle_request(response, return_data, check_success)
+
+
 class CustomResponse:
 
     class CustomResponseException(Exception):
@@ -78,17 +131,17 @@ class CustomResponse:
             super().__init__('bad_request', message, data)
 
     @staticmethod
-    def __get_status(state: str):
+    def get_status(state: str):
         return {
-            'success': {'stat': stat.HTTP_200_OK, 'message': [1]},
-            'not_found': {'stat': stat.HTTP_404_NOT_FOUND, 'message': [2]},
-            'bad_request': {'stat': stat.HTTP_400_BAD_REQUEST, 'message': [3]},
-            'internal_error': {'stat': stat.HTTP_500_INTERNAL_SERVER_ERROR, 'message': [4]},
+            'success': {'state': stat.HTTP_200_OK, 'message': [1]},
+            'not_found': {'state': stat.HTTP_404_NOT_FOUND, 'message': [2]},
+            'bad_request': {'state': stat.HTTP_400_BAD_REQUEST, 'message': [3]},
+            'internal_error': {'state': stat.HTTP_500_INTERNAL_SERVER_ERROR, 'message': [4]},
         }[state]
 
     @classmethod
     def __generate_response(cls, state='success', message=None, data=None):
-        status = cls.__get_status(state)
+        status = cls.get_status(state)
         if message is None:
             message = status['message']
 
@@ -103,7 +156,7 @@ class CustomResponse:
         if len(result['message']) != len(message) and len(str_message) > 0:
             result['message'] += str_message
 
-        return Response(data=result, status=status['stat'])
+        return Response(data=result, status=status['state'])
 
     @classmethod
     def general_response(cls, **kwargs):
@@ -126,52 +179,7 @@ class CustomResponse:
         return cls.__generate_response(state='internal_error', **kwargs)
 
 
-class CustomRequest:
-
-    __base_url = f'http://{getenv("HOST")}:{getenv("AUTH_PORT")}'
-
-    @classmethod
-    def __generate_url(cls, url):
-        return f'{cls.__base_url}{url}'
-
-    @staticmethod
-    def __handle_request(response, return_data):
-        response_json = response.json()
-        data = response_json.get('data')
-        if return_data and data:
-            return data
-        raise CustomResponse.CustomResponseException(**response_json)
-
-    @classmethod
-    def get_req(cls, url, params=None, return_data=False, **kwargs):
-        if params is None:
-            params = {}
-        response = requests.get(cls.__generate_url(url), params, **kwargs)
-        return cls.__handle_request(response, return_data)
-
-    @classmethod
-    def post_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
-        if data is None:
-            data = {}
-        response = requests.post(cls.__generate_url(url), data, json_str, **kwargs)
-        return cls.__handle_request(response, return_data)
-
-    @classmethod
-    def put_req(cls, url, data=None, return_data=False, json_str='', **kwargs):
-        if data is None:
-            data = {}
-        response = requests.put(cls.__generate_url(url), data, json_str, **kwargs)
-        return cls.__handle_request(response, return_data)
-
-    @classmethod
-    def del_req(cls, url, params=None, return_data=False, **kwargs):
-        if params is None:
-            params = {}
-        response = requests.delete(cls.__generate_url(url), params=params, **kwargs)
-        return cls.__handle_request(response, return_data)
-
-
-class MetaApiViewClass(APIView, CustomResponse, CustomRequest, Helpers):
+class MetaApiViewClass(APIView, Helpers, CustomRequest, CustomResponse):
 
     __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
@@ -186,28 +194,22 @@ class MetaApiViewClass(APIView, CustomResponse, CustomRequest, Helpers):
                     request = args[1]
                     auth_token_key = cls.__auth_token_key
                     token = request.headers.get(auth_token_key)
-                    bool_check = {
-                        True: 'true',
-                        False: 'false'
-                    }  # temporary solution
+
                     params = {
-                        "return_token_info": bool_check[return_token_info],
-                        "check_user": bool_check[check_user],
+                        "return_token_info": return_token_info,
+                        "check_user": check_user,
                     }
 
                     res = cls.get_req(
                         '/find-user-by-token/', params=params, return_data=True,
                         headers={auth_token_key: token}
                     )
+
                     cls.token_info = res.get('token_info')
                     cls.user = res.get('user')
-                    if return_token_info:
-                        return cls.success(data={'token': cls.token_info})
 
                     if check_user and not cls.user:
                         return cls.not_found(messages=[19])
-                    if not all((check_user, return_token_info)):
-                        return cls.success(data={'data': res})
 
                 try:
                     return func(*args, **kwargs)

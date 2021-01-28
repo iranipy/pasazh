@@ -71,10 +71,10 @@ schema = {
         'GET': {
             'type': 'object',
             'properties': {
-                'user_id': {'type': 'integer'}
+                'user_id': {'type': 'integer'},
             },
             'additionalProperties': False,
-            'required': ['user_id']
+            'required': ['user_id'],
         },
         'POST': {
             'type': 'object',
@@ -123,10 +123,10 @@ schema = {
         'DELETE': {
             'type': 'object',
             'properties': {
-                'user_id': {'type': 'integer'}
+                'user_id': {'type': 'integer'},
             },
             'additionalProperties': False,
-            'required': ['user_id']
+            'required': ['user_id'],
         },
     },
     'block-user': {
