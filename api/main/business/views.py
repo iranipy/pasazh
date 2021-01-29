@@ -1,5 +1,5 @@
 from main.utils import MetaApiViewClass, JsonValidation
-from .models import Product, Category, ProductAttachment, Option
+from .models import Product, Category, ProductAttachment, Option, OptionValue
 
 
 class CategoryManagement(MetaApiViewClass):
@@ -167,7 +167,8 @@ class ProductAttachmentManagement(MetaApiViewClass):
             product = Product.objects.get(uid=data['product_uid'])
         except Product.DoesNotExist:
             return self.not_found(message=[5])
-
+        if self.user.uid != product.uid.split('-')[0]:
+            return self.bad_request(message=[18])
         new_attachment = ProductAttachment.objects.create(
             product=product, type=data['type'], content=data['content'],
             size=data['size'], description=data['description']
@@ -179,7 +180,19 @@ class ProductAttachmentManagement(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def delete(self, request):
-        pass
+        data = self.request.query_params
+
+        try:
+            Product.objects.get(data['product_uid'])
+        except Product.DoesNotExist:
+            return self.not_found(message=[5])
+        if self.user.uid != data['product_uid'].split('-')[0]:
+            return self.bad_request(message=[18])
+        try:
+            ProductAttachment.objects.get(id=data['product_att_id']).delete()
+        except ProductAttachment.DoesNotExist:
+            return self.not_found(message=[24])
+        return self.success(message=[25])
 
 
 class OptionManagement(MetaApiViewClass):
@@ -201,17 +214,35 @@ class OptionManagement(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def post(self, request):
-        pass
-
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
-    @JsonValidation.validate
-    def put(self, request):
-        pass
+        data = self.request.data
+        try:
+            product = Product.objects.get(uid=data['product_uid'])
+        except Product.DoesNotExist:
+            return self.not_found(message=[5])
+        if self.user.uid != data['product_uid'].split('-')[0]:
+            return self.bad_request(message=[18])
+        user_uid = product.uid.split('-')[0]
+        new_option = Option.objects.create(product=product, name=data['name'],
+                                           is_public=data['is_public'], user_uid=user_uid)
+        new_option.save()
+        return self.success(message=[20])
 
     @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def delete(self, request):
-        pass
+        data = self.request.query_params
+
+        try:
+            Product.objects.get(data['product_uid'])
+        except Product.DoesNotExist:
+            return self.not_found(message=[5])
+        if self.user.uid != data['product_uid'].split('-')[0]:
+            return self.bad_request(message=[18])
+        try:
+            Option.objects.get(id=data['option_id']).delete()
+        except Option.DoesNotExist:
+            return self.not_found(message=[21])
+        return self.success(message=[26])
 
 
 class OptionValueManagement(MetaApiViewClass):
@@ -219,19 +250,29 @@ class OptionValueManagement(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def get(self, request):
-        pass
+        data = self.request.query_params
+        values = OptionValue.objects.filter(option_id=data['option_id'])
+        if not values:
+            return self.not_found(message=[22])
+        return self.success(data={'option_values': list(map(self.serialize, values))})
 
     @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def post(self, request):
-        pass
-
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
-    @JsonValidation.validate
-    def put(self, request):
-        pass
+        data = self.request.data
+        try:
+            option = Option.objects.get(id=data['option_id'])
+        except Product.DoesNotExist:
+            return self.not_found(message=[21])
+        OptionValue.objects.create(option=option, value=data['value'], is_public=data['is_public'])
+        return self.success(message=[23])
 
     @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
     def delete(self, request):
-        pass
+        data = self.request.query_params
+        try:
+            OptionValue.objects.get(id=data['option_value_id']).delete()
+        except OptionValue.DoesNotExist:
+            return self.not_found()
+        return self.success(message=[27])
