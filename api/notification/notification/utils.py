@@ -35,6 +35,10 @@ class Helpers:
     def serialize(instance) -> dict:
         return model_to_dict(instance)
 
+    @classmethod
+    def serialize_list(cls, arr: list) -> list:
+        return list(map(cls.serialize, arr))
+
     @staticmethod
     def parse_iso_date(iso_time, part='date_time') -> datetime:
         dt = isodate.parse_datetime(iso_time)

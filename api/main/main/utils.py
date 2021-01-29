@@ -19,6 +19,8 @@ from .schema import schema
 class AbstractModel(models.Model):
     created_at = models.DateTimeField(default=datetime.datetime.utcnow)
     modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
+    created_by = models.BigIntegerField(default=-1)
+    modified_by = models.BigIntegerField(default=-1)
     is_active = models.BooleanField(default=True)
 
     class Meta:
@@ -27,7 +29,10 @@ class AbstractModel(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.created_at = datetime.datetime.utcnow()
+            self.modified_by = self.created_by
+
         self.modified_at = datetime.datetime.utcnow()
+
         return super().save(*args, **kwargs)
 
 
@@ -36,6 +41,10 @@ class Helpers:
     @staticmethod
     def serialize(instance) -> dict:
         return model_to_dict(instance)
+
+    @classmethod
+    def serialize_list(cls, arr: list) -> list:
+        return list(map(cls.serialize, arr))
 
     @staticmethod
     def generate_rand_decimal(length: int) -> int:

@@ -12,13 +12,12 @@ class Category(AbstractModel):
     name = models.CharField(max_length=50)
     parent = models.ForeignKey('Category', on_delete=models.RESTRICT, null=True, blank=True)
     is_public = models.BooleanField(default=False)
-    user_uid = models.CharField(max_length=8, null=True, blank=True)
 
     class Meta:
         db_table = generate_table_name('category')
         constraints = [
             models.UniqueConstraint(
-                fields=['user_uid', 'name', 'parent'],
+                fields=['created_by', 'name', 'parent'],
                 name='category_name'
             )
         ]
@@ -69,14 +68,12 @@ class ProductAttachment(AbstractModel):
 class Option(AbstractModel):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     name = models.CharField(max_length=50)
-    user_uid = models.CharField(max_length=8, null=True, blank=True)
-    is_public = models.BooleanField(default=False)
 
     class Meta:
         db_table = generate_table_name('option')
         constraints = [
             models.UniqueConstraint(
-                fields=['user_uid', 'product', 'name'],
+                fields=['created_by', 'product', 'name'],
                 name='option_name'
             )
         ]
@@ -88,7 +85,6 @@ class Option(AbstractModel):
 class OptionValue(AbstractModel):
     value = models.CharField(max_length=50)
     option = models.ForeignKey(Option, on_delete=models.CASCADE)
-    is_public = models.BooleanField(default=False)
 
     class Meta:
         db_table = generate_table_name('option_value')

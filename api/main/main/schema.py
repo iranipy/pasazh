@@ -180,73 +180,71 @@ schema = {
                 'product_id': {'type': 'integer'},
             },
             'additionalProperties': False,
-            'required': ['category_id'],
+            'required': ['product_id'],
         },
     },
     'business/product-attachment': {
         'GET': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'string', 'maxLength': 20},
+                'product_id': {'type': 'integer'},
             },
             'additionalProperties': False,
-            'required': ['product_uid'],
+            'required': ['product_id'],
         },
         'POST': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'string', 'maxLength': 20},
-                'type': {'type': 'string'},
+                'product_id': {'type': 'integer'},
+                'type': {'type': 'string', 'maxLength': 50},
                 'content': {'type': 'string'},
                 'size': {'type': 'integer'},
-                'description': {'type': 'string'},
+                'description': {'type': 'string', 'maxLength': 100},
             },
             'additionalProperties': False,
-            'required': ['product_uid', 'type', 'content', 'size', 'description'],
+            'required': ['product_id', 'type', 'content', 'size', 'description'],
         },
         'DELETE': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'string', 'maxLength': 20},
+                'product_attachment_id': {'type': 'integer'},
             },
             'additionalProperties': False,
-            'required': ['product_uid'],
+            'required': ['product_attachment_id'],
         },
     },
     'business/option': {
         'GET': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'string', 'maxLength': 20},
+                'product_id': {'type': 'integer'},
             },
             'additionalProperties': False,
-            'required': ['product_uid'],
+            'required': ['product_id'],
         },
         'POST': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'string', 'maxLength': 20},
+                'product_id': {'type': 'integer'},
                 'name': {'type': 'string', 'maxLength': 50},
-                'is_public': {'type': 'boolean'}
             },
             'additionalProperties': False,
-            'required': ['product_uid', 'name', 'is_public'],
+            'required': ['product_id', 'name'],
         },
         'DELETE': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'string', 'maxLength': 20},
-                'option_id': {'type': 'integer'}
+                'option_id': {'type': 'integer'},
             },
             'additionalProperties': False,
-            'required': ['product_uid', 'option_id'],
+            'required': ['option_id'],
         }
     },
     'business/option-value': {
         'GET': {
             'type': 'object',
             'properties': {
-                'option_id': {'type': 'integer'}
+                'option_id': {'type': 'integer'},
             },
             'additionalProperties': False,
             'required': ['option_id'],
@@ -256,10 +254,9 @@ schema = {
             'properties': {
                 'option_id': {'type': 'integer'},
                 'value': {'type': 'string', 'maxLength': 50},
-                'is_public': {'type': 'boolean'}
             },
             'additionalProperties': False,
-            'required': ['option_id', 'value', 'is_public'],
+            'required': ['option_id', 'value'],
         },
         'DELETE': {
             'type': 'object',
