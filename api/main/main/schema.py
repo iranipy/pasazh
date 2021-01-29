@@ -187,7 +187,7 @@ schema = {
         'GET': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'integer'},
+                'product_uid': {'type': 'string', 'maxLength': 20},
             },
             'additionalProperties': False,
             'required': ['product_uid'],
@@ -195,7 +195,7 @@ schema = {
         'POST': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'integer'},
+                'product_uid': {'type': 'string', 'maxLength': 20},
                 'type': {'type': 'string'},
                 'content': {'type': 'string'},
                 'size': {'type': 'integer'},
@@ -207,7 +207,7 @@ schema = {
         'DELETE': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'integer'},
+                'product_uid': {'type': 'string', 'maxLength': 20},
             },
             'additionalProperties': False,
             'required': ['product_uid'],
@@ -217,10 +217,57 @@ schema = {
         'GET': {
             'type': 'object',
             'properties': {
-                'product_uid': {'type': 'integer'},
+                'product_uid': {'type': 'string', 'maxLength': 20},
             },
             'additionalProperties': False,
             'required': ['product_uid'],
         },
+        'POST': {
+            'type': 'object',
+            'properties': {
+                'product_uid': {'type': 'string', 'maxLength': 20},
+                'name': {'type': 'string', 'maxLength': 50},
+                'is_public': {'type': 'boolean'}
+            },
+            'additionalProperties': False,
+            'required': ['product_uid', 'name', 'is_public'],
+        },
+        'DELETE': {
+            'type': 'object',
+            'properties': {
+                'product_uid': {'type': 'string', 'maxLength': 20},
+                'option_id': {'type': 'integer'}
+            },
+            'additionalProperties': False,
+            'required': ['product_uid', 'option_id'],
+        }
     },
+    'business/option-value': {
+        'GET': {
+            'type': 'object',
+            'properties': {
+                'option_id': {'type': 'integer'}
+            },
+            'additionalProperties': False,
+            'required': ['option_id'],
+        },
+        'POST': {
+            'type': 'object',
+            'properties': {
+                'option_id': {'type': 'integer'},
+                'value': {'type': 'string', 'maxLength': 50},
+                'is_public': {'type': 'boolean'}
+            },
+            'additionalProperties': False,
+            'required': ['option_id', 'value', 'is_public'],
+        },
+        'DELETE': {
+            'type': 'object',
+            'properties': {
+                'option_value_id': {'type': 'integer'},
+            },
+            'additionalProperties': False,
+            'required': ['option_value_id'],
+        },
+    }
 }
