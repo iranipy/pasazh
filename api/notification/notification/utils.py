@@ -179,7 +179,6 @@ class JsonValidation:
         def decorator(*args, **kwargs):
             request = args[1]
             obj_to_validate = request.data
-
             curr_schema = cls.find_schema(request.path_info[1:], request.method)
             if not curr_schema:
                 return f(*args, **kwargs)
