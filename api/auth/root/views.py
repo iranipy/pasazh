@@ -183,7 +183,7 @@ class SalesManView(MetaApiViewClass):
         data['close_time'] = self.parse_iso_date(data['close_time'], 'time')
 
         try:
-            SalesMan.objects.get(user=self.user)
+            SalesMan.objects.get(user=self.user, is_deleted=False)
             return self.bad_request(message=[19])
         except SalesMan.DoesNotExist:
             SalesMan.objects.create(
@@ -224,8 +224,9 @@ class SalesManView(MetaApiViewClass):
             sales_man = SalesMan.objects.get(user=self.user, created_by=self.user.id)
         except SalesMan.DoesNotExist:
             return self.not_found(message=[21])
-
-        sales_man.delete()
+        sales_man.modified_by = self.user.id
+        self.user.is_deleted = True
+        self.user.deleted_date = self.get_current_utc_time()
 
         return self.success(message=[35])
 

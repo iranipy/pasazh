@@ -3,7 +3,6 @@ import auth.utils as utils
 from django.db import models
 from django.core.validators import validate_image_file_extension, RegexValidator
 
-
 generate_table_name = utils.Helpers.generate_table_name('root')
 mobile_regex = RegexValidator(regex=r'^09\d{9}$', message='Enter a valid phone number')
 
@@ -92,9 +91,9 @@ class SalesMan(utils.AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     job_category = models.ForeignKey(JobCategory, on_delete=models.RESTRICT)
     job_category_description = models.CharField(max_length=50, null=True, blank=True)
-    uid = models.CharField(max_length=18, unique=True)
+    uid = models.CharField(max_length=18)
     full_name = models.CharField(max_length=50, null=True, blank=True)
-    username = models.CharField(max_length=20, null=True, blank=True, unique=True)
+    username = models.CharField(max_length=20, null=True, blank=True)
     store_name = models.CharField(max_length=50)
     telephone = models.CharField(max_length=20, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.RESTRICT)
@@ -104,9 +103,17 @@ class SalesMan(utils.AbstractModel):
     working_days = models.CharField(max_length=27)
     activity_type = models.CharField(max_length=3, choices=choices)
     is_private = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
+    deleted_date = models.DateTimeField(default=None, blank=True, null=True)
 
     class Meta:
         db_table = generate_table_name('sales_man')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['unique', 'uid', 'deleted_date'],
+                name='deleted_salesman'
+            )
+        ]
 
     def __str__(self):
         return f'{self.store_name} - {self.user.mobile} ({self.user.id})'
