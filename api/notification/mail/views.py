@@ -39,10 +39,11 @@ class SendMail(MetaApiViewClass):
 class SendMassMail(MetaApiViewClass):
     __email_host_user = getenv("EMAIL_HOST_USER")
 
-    # @MetaApiViewClass.generic_decor()
-    # @JsonValidation.validate
+    @MetaApiViewClass.generic_decor()
+    @JsonValidation.validate
     def post(self, requests):
         data = self.request.data
+        print(type(self.request))
         from_email = self.__email_host_user
         recipients = data['recipients']
         subject = data['subject']

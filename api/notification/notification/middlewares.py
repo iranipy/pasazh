@@ -12,7 +12,8 @@ def fix_dict_encode(obj=None, return_json=False):
     for key, value in obj.items():
         val = value
         if isinstance(val, list) and len(val) > 0:
-            val = val[0]
+            # val = val[0]
+            pass
 
         if isinstance(val, str):
             val = val.strip()
