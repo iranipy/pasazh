@@ -43,7 +43,6 @@ class SendMassMail(MetaApiViewClass):
     @JsonValidation.validate
     def post(self, requests):
         data = self.request.data
-        print(type(self.request))
         from_email = self.__email_host_user
         recipients = data['recipients']
         subject = data['subject']
