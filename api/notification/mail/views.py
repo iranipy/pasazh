@@ -51,7 +51,7 @@ class SendMassMail(MetaApiViewClass):
         subject = data['subject']
         message = data['message']
 
-        data_tuple = ((subject, message, from_email, recipient) for recipient in recipients)
+        data_tuple = tuple((subject, message, from_email, recipient) for recipient in recipients)
 
         try:
             res = send_mass_mail(data_tuple)

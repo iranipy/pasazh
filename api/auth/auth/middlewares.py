@@ -24,9 +24,10 @@ def fix_str_val(val):
 
 
 def fix_list_val(sequence):
-    return [
-        s if not isinstance(s, str) else fix_str_val(s) for s in sequence
-    ]
+    generator_comprehension = (s if not isinstance(s, str) else fix_str_val(s) for s in sequence)
+    if isinstance(sequence, list):
+        return list(generator_comprehension)
+    return tuple(generator_comprehension)
 
 
 def fix_dict_encode(obj=None, return_json=False, no_list_in_data=False):
