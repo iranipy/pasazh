@@ -7,5 +7,5 @@ gen_url = Helpers.generate_url_item
 
 urlpatterns = [
     gen_url('send-mail', SendMail),
-    gen_url('send-mass-mail', SendMassMail)
+    gen_url('send-mass-mail', SendMassMail),
 ]

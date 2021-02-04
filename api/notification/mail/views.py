@@ -8,6 +8,7 @@ from .models import SentMail
 
 
 class SendMail(MetaApiViewClass):
+
     __email_host_user = getenv("EMAIL_HOST_USER")
 
     @MetaApiViewClass.generic_decor()
@@ -37,23 +38,33 @@ class SendMail(MetaApiViewClass):
 
 
 class SendMassMail(MetaApiViewClass):
+
     __email_host_user = getenv("EMAIL_HOST_USER")
 
     @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def post(self, requests):
         data = self.request.data
+
         from_email = self.__email_host_user
         recipients = data['recipients']
         subject = data['subject']
         message = data['message']
-        final_message = (subject, message, from_email, recipients)
+
+        data_tuple = ((subject, message, from_email, recipient) for recipient in recipients)
+
         try:
-            res = send_mass_mail((final_message,), fail_silently=False)
+            res = send_mass_mail(data_tuple)
             if not res:
                 raise SMTPException
-            entries = [SentMail(from_email=from_email, message=message,
-                                subject=subject, recipient=rec_email) for rec_email in recipients]
+
+            entries = [
+                SentMail(
+                    from_email=from_email, message=message,
+                    subject=subject, recipient=recipient
+                ) for recipient in recipients
+            ]
+
             SentMail.objects.bulk_create(entries)
 
         except (SMTPException, BadHeaderError) as e:
