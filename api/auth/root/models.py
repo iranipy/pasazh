@@ -3,6 +3,7 @@ import auth.utils as utils
 from django.db import models
 from django.core.validators import validate_image_file_extension, RegexValidator
 
+
 generate_table_name = utils.Helpers.generate_table_name('root')
 mobile_regex = RegexValidator(regex=r'^09\d{9}$', message='Enter a valid phone number')
 
@@ -91,7 +92,7 @@ class SalesMan(utils.AbstractModel):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     job_category = models.ForeignKey(JobCategory, on_delete=models.RESTRICT)
     job_category_description = models.CharField(max_length=50, null=True, blank=True)
-    uid = models.CharField(max_length=18)
+    uid = models.CharField(max_length=18, unique=True)
     full_name = models.CharField(max_length=50, null=True, blank=True)
     username = models.CharField(max_length=20, null=True, blank=True)
     store_name = models.CharField(max_length=50)
@@ -110,7 +111,7 @@ class SalesMan(utils.AbstractModel):
         db_table = generate_table_name('sales_man')
         constraints = [
             models.UniqueConstraint(
-                fields=['unique', 'uid', 'deleted_date'],
+                fields=['username', 'deleted_date'],
                 name='deleted_salesman'
             )
         ]

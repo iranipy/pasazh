@@ -1,4 +1,5 @@
 from os import getenv
+from django.db.models import Q
 
 from auth.utils import MetaApiViewClass, OTPRecord, Security, JsonValidation
 from .models import User, OTP, City, SalesMan, JobCategory, BlackList, Following
@@ -158,8 +159,11 @@ class SalesManView(MetaApiViewClass):
     @JsonValidation.validate
     def get(self, request):
         try:
-            sales_man = SalesMan.objects.get(user=self.user, created_by=self.user.id)
-        except SalesMan.DoesNotExist:
+            sales_man = SalesMan.objects.filter(
+                Q(is_deleted=False),
+                Q(user=self.user) | Q(created_by=self.user.id)
+            ).order_by('-created_at')[0]
+        except IndexError:
             return self.not_found(message=[21])
 
         return self.success(data=self.serialize(sales_man))
@@ -183,9 +187,12 @@ class SalesManView(MetaApiViewClass):
         data['close_time'] = self.parse_iso_date(data['close_time'], 'time')
 
         try:
-            SalesMan.objects.get(user=self.user, is_deleted=False)
+            SalesMan.objects.filter(
+                Q(is_deleted=False),
+                Q(user=self.user) | Q(username=data['username'])
+            ).order_by('-created_at')[0]
             return self.bad_request(message=[19])
-        except SalesMan.DoesNotExist:
+        except IndexError:
             SalesMan.objects.create(
                 **data, user=self.user, city=city, job_category=job_category,
                 uid=f'{self.add_lead_zero(city.code, 4)}-{self.user.uid}-{job_category.uid}',
@@ -200,8 +207,11 @@ class SalesManView(MetaApiViewClass):
         data = self.request.data
 
         try:
-            sales_man = SalesMan.objects.get(user=self.user, created_by=self.user.id)
-        except SalesMan.DoesNotExist:
+            sales_man = SalesMan.objects.filter(
+                Q(is_deleted=False),
+                Q(user=self.user) | Q(created_by=self.user.id)
+            ).order_by('-created_at')[0]
+        except IndexError:
             return self.not_found(message=[21])
 
         data['open_time'] = self.parse_iso_date(data['open_time'], 'time')
@@ -221,9 +231,10 @@ class SalesManView(MetaApiViewClass):
     @JsonValidation.validate
     def delete(self, request):
         try:
-            sales_man = SalesMan.objects.get(user=self.user, created_by=self.user.id)
-        except SalesMan.DoesNotExist:
+            sales_man = SalesMan.objects.filter(user=self.user, is_deleted=False).order_by('-created_at')[0]
+        except IndexError:
             return self.not_found(message=[21])
+
         sales_man.modified_by = self.user.id
         self.user.is_deleted = True
         self.user.deleted_date = self.get_current_utc_time()
@@ -315,8 +326,8 @@ class Follow(MetaApiViewClass):
         self.check_user(followed_user)
 
         try:
-            SalesMan.objects.get(user=followed_user)
-        except SalesMan.DoesNotExist:
+            SalesMan.objects.filter(user=followed_user, is_deleted=False).order_by('-created_at')[0]
+        except IndexError:
             return self.bad_request(message=[29])
 
         try:
