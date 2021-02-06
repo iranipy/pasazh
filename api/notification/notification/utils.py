@@ -10,7 +10,7 @@ from rest_framework.views import APIView
 from django.forms.models import model_to_dict
 from django.db import models
 from django.urls import re_path
-
+from os import getenv
 from .messages import messages
 from .schema import schema
 
@@ -142,6 +142,7 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, Helpers, CustomResponse):
+    __sms_api_key = getenv("SMS_API_KEY")
 
     @classmethod
     def generic_decor(cls):
