@@ -11,17 +11,6 @@ schema = {
             'required': ['recipient', 'subject', 'message'],
         },
     },
-    'sms/send-sms/': {
-        'POST': {
-            'type': 'object',
-            'properties': {
-                'receptor': {'type': 'string', 'pattern': r'^09\d{9}$'},
-                'message': {'type': 'string', 'minLength': 5, 'maxLength': 200},
-            },
-            'additionalProperties': False,
-            'required': ['receptor', 'message'],
-        },
-    },
     'mail/send-mass-mail/': {
         'POST': {
             'type': 'object',
@@ -35,6 +24,17 @@ schema = {
             },
             'additionalProperties': False,
             'required': ['recipients', 'subject', 'message'],
+        },
+    },
+    'sms/send-sms/': {
+        'POST': {
+            'type': 'object',
+            'properties': {
+                'receptor': {'type': 'string', 'pattern': r'^09\d{9}$'},
+                'message': {'type': 'string', 'minLength': 5, 'maxLength': 200},
+            },
+            'additionalProperties': False,
+            'required': ['receptor', 'message'],
         },
     },
 }

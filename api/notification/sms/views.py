@@ -1,17 +1,27 @@
-from notification.utils import MetaApiViewClass, JsonValidation
-
+from os import getenv
 from kavenegar import KavenegarAPI, APIException, HTTPException
 
+from notification.utils import MetaApiViewClass, JsonValidation
 from .models import SentSms
 
 
-class SendSMS(MetaApiViewClass):
+class ViewTemplate(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
+    _sms_api_key = getenv("SMS_API_KEY")
+
+
+class SendSMS(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def post(self, request):
+        """sms-send
+
+        https://kavenegar.com/rest.html#sms-send
+        """
+
         data = self.request.data
-        api = KavenegarAPI(self.__sms_api_key)
+        api = KavenegarAPI(self._sms_api_key)
 
         try:
             res = api.sms_send(data)
@@ -34,18 +44,25 @@ class SendSMS(MetaApiViewClass):
         return self.success(data=res, message=[7])
 
 
-class SendMassSMS(MetaApiViewClass):
-    @MetaApiViewClass.generic_decor()
+class SendMassSMS(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def post(self, request):
-        data = self.request.data  # https://kavenegar.com/rest.html#sms-sendarray  (parameters)
-        api = KavenegarAPI(self.__sms_api_key)
+        """sms-sendarray
+
+        https://kavenegar.com/rest.html#sms-sendarray
+        """
+
+        data = self.request.data
+        api = KavenegarAPI(self._sms_api_key)
 
         try:
-            res = api.sms_send(data)
+            res = api.sms_sendarray(data)
             if not isinstance(res, list) or len(res) == 0:
                 raise APIException
-            for r in res['entries']:
+
+            for r in res:
                 r['message_id'] = r.pop('messageid')
                 r['status_text'] = r.pop('statustext')
                 r['sent_date'] = r.pop('date')
@@ -58,105 +75,150 @@ class SendMassSMS(MetaApiViewClass):
         return self.success(data=res, message=[7])
 
 
-class DeliveryStatus(MetaApiViewClass):
-    @MetaApiViewClass.generic_decor()
+class SMSStatus(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
-        # https://kavenegar.com/rest.html#sms-status
-        # https://kavenegar.com/rest.html#sms-statuslocalmessageid
+        """sms-status
+
+        https://kavenegar.com/rest.html#sms-status
+        https://kavenegar.com/rest.html#sms-statuslocalmessageid
+        """
+
         data = self.request.query_params
-        api = KavenegarAPI(self.__sms_api_key)
+        api = KavenegarAPI(self._sms_api_key)
+
         try:
             res = api.sms_status(data) if data['message_id'] else api.sms_statuslocalmessageid(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[8, str(e)])
+            return self.internal_error(message=[9, str(e)])
 
         return self.success(data=res)
 
 
-class SelectSMS(MetaApiViewClass):
-    @MetaApiViewClass.generic_decor()
+class SelectSMS(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
-        # https://kavenegar.com/rest.html#sms-select
-        # https://kavenegar.com/rest.html#sms-selectlatest
+        """sms-select
+
+        https://kavenegar.com/rest.html#sms-select
+        https://kavenegar.com/rest.html#sms-selectlatest
+        """
+
         data = self.request.query_params
-        api = KavenegarAPI(self.__sms_api_key)
+        api = KavenegarAPI(self._sms_api_key)
+
         try:
             res = api.sms_select(data) if data['message_id'] else api.sms_latestoutbox(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[8, str(e)])
+            return self.internal_error(message=[9, str(e)])
 
         return self.success(data=res)
 
-    @MetaApiViewClass.generic_decor()
+
+class CancelSms(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def delete(self, request):
-        # https://kavenegar.com/rest.html#sms-cancel
+        """sms-cancel
+
+        https://kavenegar.com/rest.html#sms-cancel
+        """
+
         data = self.request.query_params
-        api = KavenegarAPI(self.__sms_api_key)
+        api = KavenegarAPI(self._sms_api_key)
+
         try:
-            res = api.sms_select(data) if data['message_id'] else api.sms_latestoutbox(data)
+            res = api.sms_cancel(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[8, str(e)])
+            return self.internal_error(message=[10, str(e)])
+
+        return self.success(data=res, message=[11])
+
+
+class SelectOutBoxSMS(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
+    @JsonValidation.validate
+    def get(self, request):
+        """sms-selectoutbox
+
+        https://kavenegar.com/rest.html#sms-selectoutbox
+        """
+
+        data = self.request.query_params
+        api = KavenegarAPI(self._sms_api_key)
+
+        try:
+            res = api.sms_selectoutbox(data)
+        except (APIException, HTTPException) as e:
+            return self.internal_error(message=[9, str(e)])
 
         return self.success(data=res)
 
 
-class SelectSMSInRange(MetaApiViewClass):
-    @MetaApiViewClass.generic_decor()
+class CountOutBoxSMS(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
-        # https://kavenegar.com/rest.html#sms-selectoutbox
+        """sms-countoutbox
+
+        https://kavenegar.com/rest.html#sms-countoutbox
+        """
+
         data = self.request.query_params
-        api = KavenegarAPI(self.__sms_api_key)
+        api = KavenegarAPI(self._sms_api_key)
+
         try:
-            res = api.sms_selectoutbox(data)
+            res = api.sms_countoutbox(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[8, str(e)])
+            return self.internal_error(message=[9, str(e)])
 
         return self.success(data=res)
 
 
-class CountSentSMS(MetaApiViewClass):
-    @MetaApiViewClass.generic_decor()
+class CountInBoxSMS(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
-        # https://kavenegar.com/rest.html#sms-countoutbox
+        """sms-countinbox
+
+        https://kavenegar.com/rest.html#sms-countinbox
+        """
+
         data = self.request.query_params
-        api = KavenegarAPI(self.__sms_api_key)
+        api = KavenegarAPI(self._sms_api_key)
+
         try:
-            res = api.sms_selectoutbox(data)
+            res = api.sms_countinbox(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[8, str(e)])
+            return self.internal_error(message=[9, str(e)])
 
         return self.success(data=res)
 
 
-class ReceiveSMS(MetaApiViewClass):
-    @MetaApiViewClass.generic_decor()
+class ReceiveUnReadsSMS(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
-        # https://kavenegar.com/rest.html#sms-unreads
-        data = self.request.query_params
-        api = KavenegarAPI(self.__sms_api_key)
-        try:
-            res = api.sms_selectoutbox(data)
-        except (APIException, HTTPException) as e:
-            return self.internal_error(message=[8, str(e)])
+        """sms-unreads
 
-        return self.success(data=res)
+        https://kavenegar.com/rest.html#sms-unreads
+        """
 
-class CountReceiveSMS(MetaApiViewClass):
-    @MetaApiViewClass.generic_decor()
-    @JsonValidation.validate
-    def get(self, request):
-        # https://kavenegar.com/rest.html#sms-countinbox
         data = self.request.query_params
-        api = KavenegarAPI(self.__sms_api_key)
+        api = KavenegarAPI(self._sms_api_key)
+
         try:
-            res = api.sms_selectoutbox(data)
+            res = api.sms_receive(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[8, str(e)])
+            return self.internal_error(message=[9, str(e)])
 
         return self.success(data=res)

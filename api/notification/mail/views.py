@@ -1,22 +1,24 @@
-from notification.utils import MetaApiViewClass, JsonValidation
-
 from os import getenv
 from smtplib import SMTPException
 from django.core.mail import BadHeaderError, send_mail, send_mass_mail
 
+from notification.utils import MetaApiViewClass, JsonValidation
 from .models import SentMail
 
 
-class SendMail(MetaApiViewClass):
+class ViewTemplate(MetaApiViewClass):
 
-    __email_host_user = getenv("EMAIL_HOST_USER")
+    _email_host_user = getenv("EMAIL_HOST_USER")
 
-    @MetaApiViewClass.generic_decor()
+
+class SendMail(ViewTemplate):
+
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
 
-        from_email = self.__email_host_user
+        from_email = self._email_host_user
         recipient = data['recipient']
         subject = data['subject']
         message = data['message']
@@ -37,16 +39,14 @@ class SendMail(MetaApiViewClass):
         return self.success(message=[5])
 
 
-class SendMassMail(MetaApiViewClass):
+class SendMassMail(ViewTemplate):
 
-    __email_host_user = getenv("EMAIL_HOST_USER")
-
-    @MetaApiViewClass.generic_decor()
+    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def post(self, requests):
         data = self.request.data
 
-        from_email = self.__email_host_user
+        from_email = self._email_host_user
         recipients = data['recipients']
         subject = data['subject']
         message = data['message']

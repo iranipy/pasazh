@@ -3,6 +3,7 @@ import datetime
 import isodate
 import fastjsonschema
 
+from os import getenv
 from functools import wraps
 from rest_framework.response import Response
 from rest_framework import status as stat
@@ -10,7 +11,7 @@ from rest_framework.views import APIView
 from django.forms.models import model_to_dict
 from django.db import models
 from django.urls import re_path
-from os import getenv
+
 from .messages import messages
 from .schema import schema
 
@@ -142,7 +143,6 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, Helpers, CustomResponse):
-    __sms_api_key = getenv("SMS_API_KEY")
 
     @classmethod
     def generic_decor(cls):
