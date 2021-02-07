@@ -90,7 +90,7 @@ class SMSStatus(ViewTemplate):
         api = KavenegarAPI(self._sms_api_key)
 
         try:
-            res = api.sms_status(data) if data['message_id'] else api.sms_statuslocalmessageid(data)
+            res = api.sms_status(data) if data['messageid'] else api.sms_statuslocalmessageid(data)
         except (APIException, HTTPException) as e:
             return self.internal_error(message=[9, str(e)])
 
@@ -112,7 +112,7 @@ class SelectSMS(ViewTemplate):
         api = KavenegarAPI(self._sms_api_key)
 
         try:
-            res = api.sms_select(data) if data['message_id'] else api.sms_latestoutbox(data)
+            res = api.sms_select(data) if data['messageid'] else api.sms_latestoutbox(data)
         except (APIException, HTTPException) as e:
             return self.internal_error(message=[9, str(e)])
 
@@ -203,7 +203,7 @@ class CountInBoxSMS(ViewTemplate):
         return self.success(data=res)
 
 
-class ReceiveUnReadsSMS(ViewTemplate):
+class ReadInbox(ViewTemplate):
 
     @ViewTemplate.generic_decor()
     @JsonValidation.validate
