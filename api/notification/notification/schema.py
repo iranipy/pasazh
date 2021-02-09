@@ -42,7 +42,7 @@ schema = {
             'type': 'object',
             'properties': {
                 'recipients': {
-                    'type': 'array', 'items': {'type': 'string', 'pattern': '#phoneNumRe'},  # replace
+                    'type': 'array', 'items': {'type': 'string', 'pattern': r'^09\d{9}$'},
                     'minItems': 2, 'uniqueItems': True
                 },
                 'sender': {'type': 'array', 'items': {'type': 'integer', 'minItems': 2}},
@@ -57,10 +57,10 @@ schema = {
             'type': 'object',
             'properties': {
                 'messageid': {'type': 'integer'},
-                'localid': {'type': 'integer'}
+                'localid': {'type': 'integer'},
             },
             'additionalProperties': False,
-            'required': ['messageid']
+            'required': ['messageid'],
         },
     },
     'sms/select-sms/': {
@@ -69,7 +69,7 @@ schema = {
             'properties': {
                 'messageid': {'type': 'integer'},
                 'page_size': {'type': 'integer'},
-                'sender': {'type': 'integer'}
+                'sender': {'type': 'integer'},
             },
             'additionalProperties': False,
             'required': ['page_size'],
@@ -116,7 +116,7 @@ schema = {
                 'startdate': {'type': '#UnixTime'},  # replace
                 'enddate': {'type': '#UnixTime'},  # replace
                 'linenumber': {'type': 'integer'},
-                'isread': {'type': 'number', 'minimum': 0, 'maximum': 1}
+                'isread': {'type': 'number', 'minimum': 0, 'maximum': 1},
             },
             'additionalProperties': False,
             'required': ['startdate'],
@@ -127,7 +127,7 @@ schema = {
             'type': 'object',
             'properties': {
                 'linenumber': {'type': 'integer'},
-                'isread': {'type': 'number', 'minimum': 0, 'maximum': 1}
+                'isread': {'type': 'number', 'minimum': 0, 'maximum': 1},
             },
             'additionalProperties': False,
             'required': ['linenumber', 'isread'],

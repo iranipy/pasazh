@@ -1,6 +1,6 @@
 from notification.utils import Helpers
-from .views import (SendSMS, SendMassSMS, SMSStatus, SelectSMS, CancelSms,
-                    SelectOutBoxSMS, CountOutBoxSMS, CountInBoxSMS, ReadInbox)
+from .views import SendSMS, SendMassSMS, SMSStatus, SelectSMS, CancelSms, \
+SelectOutBoxSMS, CountOutBoxSMS, CountInBoxSMS, ReadInbox
 
 
 gen_url = Helpers.generate_url_item
