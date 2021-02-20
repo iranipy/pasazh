@@ -2,7 +2,7 @@ import time
 import datetime
 import isodate
 import fastjsonschema
-
+import re
 from functools import wraps
 from rest_framework.response import Response
 from rest_framework import status as stat
@@ -70,9 +70,13 @@ class Helpers:
 
         return inner
 
+    @staticmethod
+    def kr_error_code(exception: str):
+        matches = re.search(r'\d{3}', exception)
+        return int(matches.group(0))
+
 
 class CustomResponse:
-
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):

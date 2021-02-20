@@ -10,4 +10,5 @@ messages = {
     9: 'FAILED_TO_GET_DATA',
     10: 'FAILED_TO_CANCEL_SMS',
     11: 'SMS_CANCELED',
+    417: 'WRONG_TIMESTAMP'
 }

@@ -72,7 +72,7 @@ schema = {
                 'sender': {'type': 'integer'},
             },
             'additionalProperties': False,
-            'required': ['page_size'],
+            'required': [],
         },
     },
     'sms/cancel-sms/': {
@@ -89,8 +89,8 @@ schema = {
         'GET': {
             'type': 'object',
             'properties': {
-                'startdate': {'type': '#UnixTime'},  # replace
-                'enddate': {'type': '#UnixTime'},  # replace
+                'startdate': {'type': 'number'},  # replace
+                'enddate': {'type': 'number'},  # replace
                 'sender': {'type': 'integer'},
             },
             'additionalProperties': False,
@@ -101,8 +101,8 @@ schema = {
         'GET': {
             'type': 'object',
             'properties': {
-                'startdate': {'type': '#UnixTime'},  # replace
-                'enddate': {'type': '#UnixTime'},  # replace
+                'startdate': {'type': 'number'},  # replace
+                'enddate': {'type': 'number'},  # replace
                 'sender': {'type': 'integer'},
             },
             'additionalProperties': False,
@@ -126,7 +126,7 @@ schema = {
         'GET': {
             'type': 'object',
             'properties': {
-                'linenumber': {'type': 'integer'},
+                'linenumber': {'type': 'string'},
                 'isread': {'type': 'number', 'minimum': 0, 'maximum': 1},
             },
             'additionalProperties': False,
