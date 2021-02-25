@@ -89,8 +89,8 @@ schema = {
         'GET': {
             'type': 'object',
             'properties': {
-                'startdate': {'type': 'number'},  # replace
-                'enddate': {'type': 'number'},  # replace
+                'startdate': {'type': 'number'},
+                'enddate': {'type': 'number'},
                 'sender': {'type': 'integer'},
             },
             'additionalProperties': False,
@@ -101,8 +101,8 @@ schema = {
         'GET': {
             'type': 'object',
             'properties': {
-                'startdate': {'type': 'number'},  # replace
-                'enddate': {'type': 'number'},  # replace
+                'startdate': {'type': 'number'},
+                'enddate': {'type': 'number'},
                 'sender': {'type': 'integer'},
             },
             'additionalProperties': False,
@@ -113,8 +113,8 @@ schema = {
         'GET': {
             'type': 'object',
             'properties': {
-                'startdate': {'type': '#UnixTime'},  # replace
-                'enddate': {'type': '#UnixTime'},  # replace
+                'startdate': {'type': 'number'},
+                'enddate': {'type': 'number'},
                 'linenumber': {'type': 'integer'},
                 'isread': {'type': 'number', 'minimum': 0, 'maximum': 1},
             },

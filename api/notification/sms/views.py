@@ -1,11 +1,12 @@
 from os import getenv
 from kavenegar import KavenegarAPI, APIException, HTTPException
 
-from notification.utils import MetaApiViewClass, JsonValidation, Helpers
+from notification.utils import MetaApiViewClass, JsonValidation
 from .models import SentSms
 
 
 class ViewTemplate(MetaApiViewClass):
+
     _sms_api_key = getenv("SMS_API_KEY")
 
 
@@ -24,7 +25,7 @@ class SendSMS(ViewTemplate):
 
         try:
             res = api.sms_send(data)
-            if not isinstance(res, list) or len(res) == 0:
+            if not isinstance(res, list) or not res:
                 raise APIException
 
             for r in res:
@@ -33,9 +34,6 @@ class SendSMS(ViewTemplate):
                 r['sent_date'] = r.pop('date')
 
                 SentSms.objects.create(**r).save()
-
-                if r['status'] != 1:
-                    raise APIException
 
         except (APIException, HTTPException) as e:
             return self.internal_error(message=[8, str(e)])
@@ -58,7 +56,7 @@ class SendMassSMS(ViewTemplate):
 
         try:
             res = api.sms_sendarray(data)
-            if not isinstance(res, list) or len(res) == 0:
+            if not isinstance(res, list) or not res:
                 raise APIException
 
             for r in res:
@@ -87,6 +85,7 @@ class SMSStatus(ViewTemplate):
 
         data = self.request.query_params
         api = KavenegarAPI(self._sms_api_key)
+
         try:
             res = api.sms_status(data) if data['messageid'] else api.sms_statuslocalmessageid(data)
         except (APIException, HTTPException) as e:
@@ -96,7 +95,7 @@ class SMSStatus(ViewTemplate):
 
 
 class SelectSMS(ViewTemplate):
-    #  BUG  need an ip to be set
+
     @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
@@ -108,9 +107,9 @@ class SelectSMS(ViewTemplate):
 
         data = self.request.query_params
         api = KavenegarAPI(self._sms_api_key)
+
         try:
             res = api.sms_select(data) if 'messageid' in data else api.sms_latestoutbox(data)
-            print(res)
         except (APIException, HTTPException) as e:
             return self.internal_error(message=[9, str(e)])
 
@@ -139,7 +138,7 @@ class CancelSms(ViewTemplate):
 
 
 class SelectOutBoxSMS(ViewTemplate):
-    # BUG bc of wrong timestamp format(unix time)
+
     @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
@@ -150,17 +149,17 @@ class SelectOutBoxSMS(ViewTemplate):
 
         data = self.request.query_params
         api = KavenegarAPI(self._sms_api_key)
+
         try:
             res = api.sms_selectoutbox(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[Helpers.kr_error_code(str(e))])  # nazaret?
-            # return self.internal_error(message=[9, str(e)])
+            return self.internal_error(message=[9, str(e)])
 
         return self.success(data=res)
 
 
 class CountOutBoxSMS(ViewTemplate):
-    # BUG bc of wrong timestamp format(unix time)
+
     @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
@@ -171,6 +170,7 @@ class CountOutBoxSMS(ViewTemplate):
 
         data = self.request.query_params
         api = KavenegarAPI(self._sms_api_key)
+
         try:
             res = api.sms_countoutbox(data)
         except (APIException, HTTPException) as e:
@@ -180,7 +180,7 @@ class CountOutBoxSMS(ViewTemplate):
 
 
 class CountInBoxSMS(ViewTemplate):
-    # BUG bc of wrong timestamp format(unix time)
+
     @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
@@ -201,6 +201,7 @@ class CountInBoxSMS(ViewTemplate):
 
 
 class ReadInbox(ViewTemplate):
+
     @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
@@ -211,6 +212,7 @@ class ReadInbox(ViewTemplate):
 
         data = self.request.query_params
         api = KavenegarAPI(self._sms_api_key)
+
         try:
             res = api.sms_receive(data)
         except (APIException, HTTPException) as e:
