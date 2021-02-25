@@ -9,6 +9,10 @@ class ViewTemplate(MetaApiViewClass):
 
     _sms_api_key = getenv("SMS_API_KEY")
 
+    @staticmethod
+    def _decode_exception_message(e: Exception) -> str:
+        return e.args[0].decode('utf-8')
+
 
 class SendSMS(ViewTemplate):
 
@@ -36,7 +40,7 @@ class SendSMS(ViewTemplate):
                 SentSms.objects.create(**r).save()
 
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[8, str(e)])
+            return self.internal_error(message=[8, self._decode_exception_message(e)])
 
         return self.success(data=res, message=[7])
 
@@ -67,7 +71,7 @@ class SendMassSMS(ViewTemplate):
                 SentSms.objects.create(**r).save()
 
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[8, str(e)])
+            return self.internal_error(message=[8, self._decode_exception_message(e)])
 
         return self.success(data=res, message=[7])
 
@@ -89,7 +93,7 @@ class SMSStatus(ViewTemplate):
         try:
             res = api.sms_status(data) if data['messageid'] else api.sms_statuslocalmessageid(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[9, str(e)])
+            return self.internal_error(message=[9, self._decode_exception_message(e)])
 
         return self.success(data=res)
 
@@ -111,7 +115,7 @@ class SelectSMS(ViewTemplate):
         try:
             res = api.sms_select(data) if 'messageid' in data else api.sms_latestoutbox(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[9, str(e)])
+            return self.internal_error(message=[9, self._decode_exception_message(e)])
 
         return self.success(data=res)
 
@@ -132,7 +136,7 @@ class CancelSms(ViewTemplate):
         try:
             res = api.sms_cancel(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[10, str(e)])
+            return self.internal_error(message=[10, self._decode_exception_message(e)])
 
         return self.success(data=res, message=[11])
 
@@ -153,7 +157,7 @@ class SelectOutBoxSMS(ViewTemplate):
         try:
             res = api.sms_selectoutbox(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[9, str(e)])
+            return self.internal_error(message=[9, self._decode_exception_message(e)])
 
         return self.success(data=res)
 
@@ -174,7 +178,7 @@ class CountOutBoxSMS(ViewTemplate):
         try:
             res = api.sms_countoutbox(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[9, str(e)])
+            return self.internal_error(message=[9, self._decode_exception_message(e)])
 
         return self.success(data=res)
 
@@ -195,7 +199,7 @@ class CountInBoxSMS(ViewTemplate):
         try:
             res = api.sms_countinbox(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[9, str(e)])
+            return self.internal_error(message=[9, self._decode_exception_message(e)])
 
         return self.success(data=res)
 
@@ -216,6 +220,6 @@ class ReadInbox(ViewTemplate):
         try:
             res = api.sms_receive(data)
         except (APIException, HTTPException) as e:
-            return self.internal_error(message=[9, str(e)])
+            return self.internal_error(message=[9, self._decode_exception_message(e)])
 
         return self.success(data=res)
