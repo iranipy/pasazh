@@ -58,7 +58,7 @@ class FixRequestParams:
 
     def __call__(self, request, *args, **kwargs):
         if request.path.startswith(reverse('admin:index')):
-            return None
+            return self.get_response(request)
 
         body = getattr(request, '_body', request.body)
         if body:
