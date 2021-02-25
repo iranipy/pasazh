@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework'
     'sms.apps.SmsConfig',
     'mail.apps.MailConfig',
 ]
