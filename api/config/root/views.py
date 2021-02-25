@@ -17,6 +17,7 @@ class Config(MetaApiViewClass):
     @MetaApiViewClass.generic_decor()
     def put(self, request):
         data = self.request.data
+        data['modified_by'] = data.pop('user_id')
 
         try:
             config = Configs.objects.get(name=data.get('name'), is_active=True)
@@ -26,8 +27,8 @@ class Config(MetaApiViewClass):
         if not config.is_editable:
             return self.bad_request(message=[6])
 
-        for attr in data:
-            setattr(config, attr, data['attr'])
+        for item in data:
+            setattr(config, item, data[item])
 
         config.save()
 
