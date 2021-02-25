@@ -1,8 +1,10 @@
 from config.utils import Helpers
+from .views import Config
 
-from .views import ConfigRetrieve
-generate_url = Helpers.generate_url_item
+
+gen_url = Helpers.generate_url_item
+
 
 urlpatterns = [
-    generate_url('config-retrieve', ConfigRetrieve)
+    gen_url('config', Config),
 ]

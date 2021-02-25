@@ -1,27 +1,12 @@
-# schema = {
-#     'mail/send-mail/': {
-#         'POST': {
-#             'type': 'object',
-#             'properties': {
-#                 'recipient': {'type': 'string', 'format': 'email', 'minLength': 5, 'maxLength': 100},
-#                 'subject': {'type': 'string', 'minLength': 5, 'maxLength': 100},
-#                 'message': {'type': 'string', 'minLength': 5, 'maxLength': 1000},
-#             },
-#             'additionalProperties': False,
-#             'required': ['recipient', 'subject', 'message'],
-#         },
-#     },
-#
-
 schema = {
-    'config-retrieve': {
+    'config': {
         'GET': {
             'type': 'object',
             'properties': {
-                'name': {'type': 'string', 'maxLength': 50}
+                'name': {'type': 'string', 'maxLength': 50},
             },
             'additionalProperties': False,
-            'required': ['name']
+            'required': ['name'],
         },
         'PUT': {
             'type': 'object',
@@ -31,7 +16,7 @@ schema = {
                 'value': {'type': 'string', 'maxLength': 200},
             },
             'additionalProperties': False,
-            'required': ['name', 'is_active', 'value']
-        }
-    }
+            'required': ['name', 'is_active', 'value'],
+        },
+    },
 }

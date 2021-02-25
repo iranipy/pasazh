@@ -1,15 +1,13 @@
 import datetime
 import fastjsonschema
 
+from functools import wraps
 from django.db import models
 from django.urls import re_path
 from django.forms.models import model_to_dict
-
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status as stat
-
-from functools import wraps
 
 from .messages import messages
 from .schema import schema
@@ -48,6 +46,7 @@ class Helpers:
 
 
 class CustomResponse:
+
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):
