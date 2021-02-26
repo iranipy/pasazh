@@ -46,8 +46,11 @@ class AbstractModel(models.Model):
 class Helpers:
 
     @staticmethod
-    def serialize(instance) -> dict:
-        return model_to_dict(instance)
+    def serialize(instance, *args) -> dict:
+        data = model_to_dict(instance)
+        for key in args:
+            data.pop(key)
+        return data
 
     @classmethod
     def serialize_list(cls, arr: list) -> list:

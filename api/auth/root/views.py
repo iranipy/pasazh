@@ -34,7 +34,7 @@ class FindUserByMobile(MetaApiViewClass):
             new_user.save()
             user = User.objects.get(id=new_user.id)
 
-        return self.success(data=self.serialize(user))
+        return self.success(data=self.serialize(user, 'id'))
 
 
 class FindUserByToken(MetaApiViewClass):
@@ -187,7 +187,7 @@ class SalesManView(MetaApiViewClass):
         data['close_time'] = self.parse_iso_date(data['close_time'], 'time')
 
         try:
-            SalesMan.objects.filter(
+            _ = SalesMan.objects.filter(
                 Q(is_deleted=False),
                 Q(user=self.user) | Q(username=data['username'])
             ).order_by('-created_at')[0]
