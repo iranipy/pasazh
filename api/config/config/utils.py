@@ -36,13 +36,20 @@ class AbstractModel(models.Model):
 class Helpers:
 
     @staticmethod
+    def serialize(instance, fields=None, exclude=None) -> dict:
+        return model_to_dict(instance, fields, exclude)
+
+    @classmethod
+    def serialize_list(cls, arr: list, fields=None, exclude=None) -> list:
+        return list(map(
+            lambda instance: cls.serialize(instance, fields, exclude),
+            arr
+        ))
+
+    @staticmethod
     def generate_url_item(url, view):
         url = f'^{url}/?$'
         return re_path(url, view.as_view(), name=url)
-
-    @staticmethod
-    def serialize(instance) -> dict:
-        return model_to_dict(instance)
 
 
 class CustomResponse:
