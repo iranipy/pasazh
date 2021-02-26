@@ -38,14 +38,19 @@ class AbstractModel(models.Model):
 
 class Helpers:
 
-    @staticmethod
-    def serialize(instance, fields=None, exclude=None) -> dict:
+    __general_exclude = ['created_by', 'created_at', 'modified_by', 'modified_at']
+
+    @classmethod
+    def serialize(cls, instance, fields=None, exclude=None, general_exclude=False) -> dict:
+        if general_exclude:
+            exclude = (exclude or []) + cls.__general_exclude
+
         return model_to_dict(instance, fields, exclude)
 
     @classmethod
-    def serialize_list(cls, arr: list, fields=None, exclude=None) -> list:
+    def serialize_list(cls, arr: list, fields=None, exclude=None, default_exclude=False) -> list:
         return list(map(
-            lambda instance: cls.serialize(instance, fields, exclude),
+            lambda instance: cls.serialize(instance, fields, exclude, default_exclude),
             arr
         ))
 
