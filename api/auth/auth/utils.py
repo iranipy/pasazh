@@ -44,7 +44,6 @@ class AbstractModel(models.Model):
 
 
 class Helpers:
-
     __general_exclude = ['created_by', 'created_at', 'modified_by', 'modified_at']
 
     @classmethod
@@ -118,7 +117,6 @@ class Helpers:
 
 
 class Security:
-
     __secret_key = getenv('SECRET_KEY')
 
     @staticmethod
@@ -142,6 +140,10 @@ class Security:
             return
         return decoded_token
 
+    class SecureObjects(models.Manager):
+        def get_queryset(self):
+            return super().get_queryset().defer('created_by', 'created_at', 'modified_by', 'modified_at')
+
 
 class OTPRecord:
 
@@ -154,7 +156,6 @@ class OTPRecord:
 
 
 class CustomRequest:
-
     __base_url = f'http://{getenv("HOST")}:{getenv("NOTIFICATION_PORT")}'
 
     @classmethod
@@ -207,7 +208,6 @@ class CustomRequest:
 
 
 class CustomResponse:
-
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):
@@ -277,7 +277,6 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, Helpers, CustomRequest, CustomResponse):
-
     user = None
 
     @classmethod

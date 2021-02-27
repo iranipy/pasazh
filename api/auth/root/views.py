@@ -32,7 +32,7 @@ class FindUserByMobile(MetaApiViewClass):
         if not user and data.get('insert'):
             new_user = User.objects.create(mobile=data.get('mobile'))
             new_user.save()
-            user = User.objects.get(id=new_user.id)
+            user = User.secure_objects.get(id=new_user.id)
 
         return self.success(data=self.serialize(user))
 
