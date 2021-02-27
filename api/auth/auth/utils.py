@@ -156,11 +156,16 @@ class OTPRecord:
 
 
 class CustomRequest:
-    __base_url = f'http://{getenv("HOST")}:{getenv("NOTIFICATION_PORT")}'
+    __notification_url = f'http://{getenv("HOST")}:{getenv("NOTIFICATION_PORT")}'
+    __config_url = f'http://{getenv("HOST")}:{getenv("CONFIG_PORT")}'
 
     @classmethod
-    def __generate_url(cls, url):
-        return f'{cls.__base_url}{url}'
+    def __generate_url(cls, base, url):
+        base_url = {
+            'notification': cls.__notification_url,
+            'config': cls.__config_url
+        }[base]
+        return f'{base_url}{url}'
 
     @staticmethod
     def __handle_request(response, return_data=False, check_success=False):
@@ -179,10 +184,10 @@ class CustomRequest:
         raise CustomResponse.CustomResponseException(**response_json)
 
     @classmethod
-    def get_req(cls, url, params=None, return_data=False, check_success=False, **kwargs):
+    def get_req(cls, base_url, url, params=None, return_data=False, check_success=False, **kwargs):
         if params is None:
             params = {}
-        response = requests.get(cls.__generate_url(url), params, **kwargs)
+        response = requests.get(cls.__generate_url(base_url, url), params, **kwargs)
         return cls.__handle_request(response, return_data, check_success)
 
     @classmethod

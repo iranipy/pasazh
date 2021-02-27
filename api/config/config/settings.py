@@ -101,4 +101,4 @@ USE_TZ = False
 STATIC_URL = '/static/'
 
 # Extra settings
-APPEND_SLASH = False
+APPEND_SLASH = True

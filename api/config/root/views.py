@@ -33,3 +33,13 @@ class Config(MetaApiViewClass):
         config.save()
 
         return self.success(message=[7], data=self.serialize(config))
+
+
+class OTPConfig(MetaApiViewClass):
+    @MetaApiViewClass.generic_decor()
+    def get(self, request):
+        data = self.request.query_params
+        otp_code = data.get('otp_code')
+        config_text = Configs.objects.filter(name='OTP')[0]
+        body = f'{config_text.value}: {otp_code}'
+        return self.success(data={'body': body})

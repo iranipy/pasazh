@@ -84,14 +84,16 @@ class CreateOtp(MetaApiViewClass):
         otp = OTPRecord.create_otp_fields(data['confirm_code_expire_minutes'], data['otp_code_length'])
         OTP.objects.create(user=self.user, created_by=self.user.id, **otp).save()
 
-        res = self.post_req('/sms/send-sms/', json_str={
-            'receptor': self.user.mobile, 'message': otp['code']
-        }, check_success=True)
-
+        res = self.get_req('config', url='/otp/', params={'otp_code': otp['code']}, return_data=True)
+        # res = self.post_req('/sms/send-sms/', json_str={
+        #     'receptor': self.user.mobile, 'message': res['body']
+        # }, check_success=True)
+        #
         if not res:
             return self.internal_error()
+        return self.success(message=[10], data=res)
 
-        return self.success(message=[10], data={'code': otp['code']})
+        # return self.success(message=[10], data={'code': otp['code']})
 
 
 class ConfirmCode(MetaApiViewClass):
@@ -187,7 +189,7 @@ class SalesManView(MetaApiViewClass):
         data['close_time'] = self.parse_iso_date(data['close_time'], 'time')
 
         try:
-            SalesMan.objects.filter(
+            _ = SalesMan.objects.filter(
                 Q(is_deleted=False),
                 Q(user=self.user) | Q(username=data['username'])
             ).order_by('-created_at')[0]
