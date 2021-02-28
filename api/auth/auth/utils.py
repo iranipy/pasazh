@@ -294,7 +294,7 @@ class MetaApiViewClass(APIView, Helpers, CustomRequest, CustomResponse):
                 try:
                     if user_id_in_params:
                         user_id = request.query_params.get('user_id')
-
+                    print(request.query_params)
                     if user_by_id:
                         if not user_id:
                             return cls.not_found(message=[8])

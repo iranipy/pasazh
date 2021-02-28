@@ -113,7 +113,7 @@ class CustomRequest:
     def put_req(cls, url, data=None, return_data=False, check_success=False, json_str='', **kwargs):
         if data is None:
             data = {}
-        response = requests.put(cls.__generate_url(url), data, json_str, **kwargs)
+        response = requests.put(cls.__generate_url(url), data, json=json_str, **kwargs)
         return cls.__handle_request(response, return_data, check_success)
 
     @classmethod
@@ -223,7 +223,7 @@ class MetaApiViewClass(APIView, Helpers, CustomRequest, CustomResponse):
                         cls.user = res.get('user')
 
                         if check_user and not cls.user:
-                            return cls.not_found(messages=[19])
+                            return cls.not_found(message=[19])
 
                     return func(*args, **kwargs)
                 except cls.NotFound as e:
