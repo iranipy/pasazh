@@ -203,28 +203,28 @@ class MetaApiViewClass(APIView, Helpers, CustomRequest, CustomResponse):
     def generic_decor(cls, protected=False, return_token_info=False, check_user=False):
         def decorator(func):
             def wrapper(*args, **kwargs):
-                if protected:
-                    request = args[1]
-                    auth_token_key = cls.__auth_token_key
-                    token = request.headers.get(auth_token_key)
-
-                    params = {
-                        "return_token_info": return_token_info,
-                        "check_user": check_user,
-                    }
-
-                    res = cls.get_req(
-                        '/find-user-by-token/', params=params, return_data=True,
-                        headers={auth_token_key: token}
-                    )
-
-                    cls.token_info = res.get('token_info')
-                    cls.user = res.get('user')
-
-                    if check_user and not cls.user:
-                        return cls.not_found(messages=[19])
-
                 try:
+                    if protected:
+                        request = args[1]
+                        auth_token_key = cls.__auth_token_key
+                        token = request.headers.get(auth_token_key)
+
+                        params = {
+                            "return_token_info": return_token_info,
+                            "check_user": check_user,
+                        }
+
+                        res = cls.get_req(
+                            '/find-user-by-token/', params=params, return_data=True,
+                            headers={auth_token_key: token}
+                        )
+
+                        cls.token_info = res.get('token_info')
+                        cls.user = res.get('user')
+
+                        if check_user and not cls.user:
+                            return cls.not_found(messages=[19])
+
                     return func(*args, **kwargs)
                 except cls.NotFound as e:
                     return cls.not_found(message=e.message, data=e.data)
