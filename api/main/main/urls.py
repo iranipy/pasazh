@@ -8,5 +8,5 @@ urlpatterns = [
     path('user/', include('user.urls')),
     path('salesman/', include('salesman.urls')),
     path('business/', include('business.urls')),
-    # path('', include('root.urls')),
+    path('', include('root.urls')),
 ]

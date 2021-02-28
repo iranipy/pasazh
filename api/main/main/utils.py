@@ -37,7 +37,6 @@ class AbstractModel(models.Model):
 
 
 class Helpers:
-
     __general_exclude = ['created_by', 'created_at', 'modified_by', 'modified_at']
 
     @classmethod
@@ -74,7 +73,6 @@ class Helpers:
 
 
 class CustomRequest:
-
     __base_url = f'http://{getenv("HOST")}:{getenv("AUTH_PORT")}'
 
     @classmethod
@@ -127,7 +125,6 @@ class CustomRequest:
 
 
 class CustomResponse:
-
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):
@@ -197,7 +194,6 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, Helpers, CustomRequest, CustomResponse):
-
     __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
     token_info = None

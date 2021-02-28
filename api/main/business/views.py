@@ -84,6 +84,15 @@ class ProductManagement(MetaApiViewClass):
             return self.not_found(message=[16])
 
         return self.success(data={'products': self.serialize_list(products)})
+    # def get(self, request):
+    #     data = self.request.query_params
+    #
+    #     products = Product.objects.filter(category_id=data['category_id'])
+    #
+    #     if not products:
+    #         return self.not_found(message=[16])
+    #
+    #     return self.success(data={'products': self.serialize_list(products)})
 
     @MetaApiViewClass.generic_decor(protected=True, check_user=True)
     @JsonValidation.validate
