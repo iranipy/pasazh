@@ -53,7 +53,7 @@ class FindUserByToken(MetaApiViewClass):
         try:
             token_info = Security.decode_jwt_token(token)
             if not token_info.get('user_id'):
-                raise DecodeError()
+                raise DecodeError('jwt decode error')
         except DecodeError:
             return self.bad_request(message=[9])
 
