@@ -13,12 +13,20 @@ from .messages import messages
 from .schema import schema
 
 
+class CustomManager(models.Manager):
+
+    def get_queryset(self):
+        return super().get_queryset().defer(*Helpers.general_exclude)
+
+
 class AbstractModel(models.Model):
     created_at = models.DateTimeField(default=datetime.datetime.utcnow)
     modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
     created_by = models.BigIntegerField(default=-1)
     modified_by = models.BigIntegerField(default=-1)
     is_active = models.BooleanField(default=True)
+    secure_objects = CustomManager()
+    objects = models.Manager()
 
     class Meta:
         abstract = True
@@ -35,12 +43,12 @@ class AbstractModel(models.Model):
 
 class Helpers:
 
-    __general_exclude = ['created_by', 'created_at', 'modified_by', 'modified_at']
+    general_exclude = ['created_by', 'created_at', 'modified_by', 'modified_at']
 
     @classmethod
     def serialize(cls, instance, fields=None, exclude=None, general_exclude=False) -> dict:
         if general_exclude:
-            exclude = (exclude or []) + cls.__general_exclude
+            exclude = (exclude or []) + cls.general_exclude
 
         return model_to_dict(instance, fields, exclude)
 
