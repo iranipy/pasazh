@@ -36,10 +36,15 @@ class Config(MetaApiViewClass):
 
 
 class OTPConfig(MetaApiViewClass):
+
     @MetaApiViewClass.generic_decor()
     def get(self, request):
         data = self.request.query_params
         otp_code = data.get('otp_code')
-        config_text = Configs.objects.filter(name='OTP')[0]
-        body = f'{config_text.value}: {otp_code}'
-        return self.success(data={'body': body})
+
+        try:
+            config = Configs.objects.get(name='OTP')
+        except Configs.DoesNotExist:
+            return self.not_found(message=[5])
+
+        return self.success(data={'msg': f'{config.value}: {otp_code}'})
