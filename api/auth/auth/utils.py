@@ -23,12 +23,21 @@ from .messages import messages
 from .schema import schema
 
 
+class CustomManager(models.Manager):
+
+    def get_queryset(self):
+        return super().get_queryset().defer(*Helpers.general_exclude)
+
+
 class AbstractModel(models.Model):
+
     created_at = models.DateTimeField(default=datetime.datetime.utcnow)
     modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
     created_by = models.BigIntegerField(default=-1)
     modified_by = models.BigIntegerField(default=-1)
     is_active = models.BooleanField(default=True)
+    secure_objects = CustomManager()
+    objects = models.Manager()
 
     class Meta:
         abstract = True
@@ -44,12 +53,13 @@ class AbstractModel(models.Model):
 
 
 class Helpers:
-    __general_exclude = ['created_by', 'created_at', 'modified_by', 'modified_at']
+
+    general_exclude = ['created_by', 'created_at', 'modified_by', 'modified_at']
 
     @classmethod
     def serialize(cls, instance, fields=None, exclude=None, general_exclude=False) -> dict:
         if general_exclude:
-            exclude = (exclude or []) + cls.__general_exclude
+            exclude = (exclude or []) + cls.general_exclude
 
         return model_to_dict(instance, fields, exclude)
 
@@ -117,6 +127,7 @@ class Helpers:
 
 
 class Security:
+
     __secret_key = getenv('SECRET_KEY')
 
     @staticmethod
@@ -140,10 +151,6 @@ class Security:
             return
         return decoded_token
 
-    class SecureObjects(models.Manager):
-        def get_queryset(self):
-            return super().get_queryset().defer('created_by', 'created_at', 'modified_by', 'modified_at')
-
 
 class OTPRecord:
 
@@ -156,16 +163,16 @@ class OTPRecord:
 
 
 class CustomRequest:
-    __notification_url = f'http://{getenv("HOST")}:{getenv("NOTIFICATION_PORT")}'
-    __config_url = f'http://{getenv("HOST")}:{getenv("CONFIG_PORT")}'
 
-    @classmethod
-    def __generate_url(cls, base, url):
-        base_url = {
-            'notification': cls.__notification_url,
-            'config': cls.__config_url
-        }[base]
-        return f'{base_url}{url}'
+    __base_url = f'http://{getenv("HOST")}'
+
+    def __init__(self, project_name):
+        project_port = {
+            'notification': getenv("NOTIFICATION_PORT"),
+            'config': getenv("CONFIG_PORT"),
+        }[project_name]
+
+        self.__base_url += f':{project_port}'
 
     @staticmethod
     def __handle_request(response, return_data=False, check_success=False):
@@ -183,36 +190,36 @@ class CustomRequest:
 
         raise CustomResponse.CustomResponseException(**response_json)
 
-    @classmethod
-    def get_req(cls, base_url, url, params=None, return_data=False, check_success=False, **kwargs):
+    def __generate_url(self, url):
+        return f'{self.__base_url}{url}'
+
+    def get(self, url, params=None, return_data=False, check_success=False, **kwargs):
         if params is None:
             params = {}
-        response = requests.get(cls.__generate_url(base_url, url), params, **kwargs)
-        return cls.__handle_request(response, return_data, check_success)
+        response = requests.get(self.__generate_url(url), params, **kwargs)
+        return self.__handle_request(response, return_data, check_success)
 
-    @classmethod
-    def post_req(cls, url, data=None, return_data=False, check_success=False, json_str='', **kwargs):
+    def post(self, url, data=None, return_data=False, check_success=False, **kwargs):
         if data is None:
             data = {}
-        response = requests.post(cls.__generate_url(url), data, json_str, **kwargs)
-        return cls.__handle_request(response, return_data, check_success)
+        response = requests.post(self.__generate_url(url), data, **kwargs)
+        return self.__handle_request(response, return_data, check_success)
 
-    @classmethod
-    def put_req(cls, url, data=None, return_data=False, check_success=False, json_str='', **kwargs):
+    def put(self, url, data=None, return_data=False, check_success=False, **kwargs):
         if data is None:
             data = {}
-        response = requests.put(cls.__generate_url(url), data, json_str, **kwargs)
-        return cls.__handle_request(response, return_data, check_success)
+        response = requests.put(self.__generate_url(url), data, **kwargs)
+        return self.__handle_request(response, return_data, check_success)
 
-    @classmethod
-    def del_req(cls, url, params=None, return_data=False, check_success=False, **kwargs):
+    def delete(self, url, params=None, return_data=False, check_success=False, **kwargs):
         if params is None:
             params = {}
-        response = requests.delete(cls.__generate_url(url), params=params, **kwargs)
-        return cls.__handle_request(response, return_data, check_success)
+        response = requests.delete(self.__generate_url(url), params=params, **kwargs)
+        return self.__handle_request(response, return_data, check_success)
 
 
 class CustomResponse:
+
     class CustomResponseException(Exception):
 
         def __init__(self, state='internal_error', message=None, data=None):
@@ -281,8 +288,11 @@ class CustomResponse:
         return cls.__generate_response(state='internal_error', **kwargs)
 
 
-class MetaApiViewClass(APIView, Helpers, CustomRequest, CustomResponse):
+class MetaApiViewClass(APIView, Helpers, CustomResponse):
+
     user = None
+    notification_req = CustomRequest('notification')
+    config_req = CustomRequest('config')
 
     @classmethod
     def generic_decor(cls, user_by_id=False, user_id_in_params=False, serialize=False):
@@ -294,7 +304,7 @@ class MetaApiViewClass(APIView, Helpers, CustomRequest, CustomResponse):
                 try:
                     if user_id_in_params:
                         user_id = request.query_params.get('user_id')
-                    print(request.query_params)
+
                     if user_by_id:
                         if not user_id:
                             return cls.not_found(message=[8])
