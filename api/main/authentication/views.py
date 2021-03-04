@@ -15,12 +15,12 @@ class Login(MetaApiViewClass):
     def post(self, request):
         data = self.request.data
 
-        user = self.get_req('/find-user-by-mobile/', params={
-            'mobile': data['mobile'], 'insert': True,
+        user = self.auth_req.get('/find-user-by-mobile', params={
+            'mobile': data['mobile'], 'insert': 'true',
             'deleted_account_limit_hours': self.__deleted_account_limit_hours
         }, return_data=True)
 
-        self.post_req('/create-otp/', json_str={
+        self.auth_req.post('/create-otp', data={
             'user_id': int(user['id']),
             'login_attempt_limit_hour': int(self.__login_attempt_limit_hour),
             'confirm_code_expire_minutes': int(self.__confirm_code_expire_minutes),
@@ -40,12 +40,12 @@ class ConfirmCode(MetaApiViewClass):
     def post(self, request):
         data = self.request.data
 
-        user = self.get_req('/find-user-by-mobile/', params={
-            'mobile': data['mobile'], 'insert': 'true',
+        user = self.auth_req.get('/find-user-by-mobile', params={
+            'mobile': data['mobile'],
             'deleted_account_limit_hours': self.__deleted_account_limit_hours
         }, return_data=True)
 
-        self.post_req('/confirm-code/', json_str={
+        self.auth_req.post('/confirm-code', data={
             'confirm_code': data['confirm_code'],
             'user_id': int(user['id']),
             'confirm_code_try_count_limit': int(self.__confirm_code_try_count_limit)

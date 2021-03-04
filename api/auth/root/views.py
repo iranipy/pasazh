@@ -15,15 +15,12 @@ class FindUserByMobile(MetaApiViewClass):
         user = None
 
         try:
-            user = User.objects.filter(mobile=data.get(
-                'mobile')).order_by('-created_at')[0]
+            user = User.objects.filter(mobile=data.get('mobile')).order_by('-created_at')[0]
 
             check_deletion = not data.get('insert')
-            self.check_user(user, raise_error=True,
-                            check_deletion=check_deletion, extra_messages=[5])
+            self.check_user(user, raise_error=True, check_deletion=check_deletion, extra_messages=[5])
 
-            deleted_account_limit_hours = data.get(
-                'deleted_account_limit_hours')
+            deleted_account_limit_hours = data.get('deleted_account_limit_hours')
             if user.deleted_date and deleted_account_limit_hours:
                 now = self.get_current_utc_time()
                 if (now - user.deleted_date).seconds <= (deleted_account_limit_hours * 60 * 60):
@@ -36,6 +33,7 @@ class FindUserByMobile(MetaApiViewClass):
         if not user and data.get('insert'):
             new_user = User.objects.create(mobile=data.get('mobile'))
             new_user.save()
+
             user = User.secure_objects.get(id=new_user.id)
 
         return self.success(data=self.serialize(user))
@@ -80,32 +78,27 @@ class CreateOtp(MetaApiViewClass):
         data = self.request.data
 
         try:
-            confirmation_try = OTP.objects.filter(user=self.user).exclude(
-                expire=0).order_by('-created_at')[2]
+            confirmation_try = OTP.objects.filter(user=self.user).exclude(expire=0).order_by('-created_at')[2]
             now = self.get_current_utc_time()
-            difference = (
-                now - confirmation_try.created_at).seconds // (60 * 60)
+            difference = (now - confirmation_try.created_at).seconds // (60 * 60)
             if difference < int(data['login_attempt_limit_hour']):
                 return self.bad_request(message=[6])
         except IndexError:
             pass
 
-        otp = OTPRecord.create_otp_fields(
-            data['confirm_code_expire_minutes'], data['otp_code_length'])
-        OTP.objects.create(
-            user=self.user, created_by=self.user.id, **otp).save()
+        otp = OTPRecord.create_otp_fields(data['confirm_code_expire_minutes'], data['otp_code_length'])
+        OTP.objects.create(user=self.user, created_by=self.user.id, **otp).save()
 
-        res = self.get_req('config', url='/otp/',
-                           params={'otp_code': otp['code']}, return_data=True)
-        # res = self.post_req('/sms/send-sms/', json_str={
-        #     'receptor': self.user.mobile, 'message': res['body']
-        # }, check_success=True)
-        #
+        config_req = self.config_req.get(url='/otp', params={'otp_code': otp['code']}, return_data=True)
+
+        res = self.notification_req.post(url='/sms/send-sms', data={
+            'receptor': self.user.mobile, 'message': config_req['msg']
+        }, check_success=True)
+
         if not res:
             return self.internal_error()
-        return self.success(message=[10], data=res)
 
-        # return self.success(message=[10], data={'code': otp['code']})
+        return self.success(message=[10], data=res)
 
 
 class ConfirmCode(MetaApiViewClass):
@@ -193,8 +186,7 @@ class SalesManView(MetaApiViewClass):
             return self.bad_request(message=[17])
 
         try:
-            job_category = JobCategory.objects.get(
-                id=data.pop('job_category_id'))
+            job_category = JobCategory.objects.get(id=data.pop('job_category_id'))
         except JobCategory.DoesNotExist:
             return self.bad_request(message=[18])
 
@@ -246,8 +238,7 @@ class SalesManView(MetaApiViewClass):
     @JsonValidation.validate
     def delete(self, request):
         try:
-            sales_man = SalesMan.objects.filter(
-                user=self.user, is_deleted=False).order_by('-created_at')[0]
+            sales_man = SalesMan.objects.filter(user=self.user, is_deleted=False).order_by('-created_at')[0]
         except IndexError:
             return self.not_found(message=[21])
 
@@ -263,8 +254,7 @@ class Block(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
     @JsonValidation.validate
     def get(self, request):
-        banned_users = BlackList.objects.filter(
-            user=self.user, created_by=self.user.id)
+        banned_users = BlackList.objects.filter(user=self.user, created_by=self.user.id)
 
         black_list = [
             {'uid': usr.banned_user.uid, 'nick_name': usr.banned_user.nick_name}
@@ -293,7 +283,9 @@ class Block(MetaApiViewClass):
             return self.bad_request(message=[24])
         except BlackList.DoesNotExist:
             BlackList.objects.create(
-                user=self.user, banned_user=banned_user, created_by=self.user.id).save()
+                user=self.user, banned_user=banned_user,
+                created_by=self.user.id
+            ).save()
 
         return self.success(message=[25])
 
@@ -304,7 +296,8 @@ class Block(MetaApiViewClass):
 
         try:
             banned_user = BlackList.objects.get(
-                user=self.user, banned_user=data['banned_user_id'], created_by=self.user.id
+                user=self.user, banned_user=data['banned_user_id'],
+                created_by=self.user.id
             )
         except BlackList.DoesNotExist:
             return self.bad_request(message=[26])
@@ -319,8 +312,7 @@ class Follow(MetaApiViewClass):
     @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
     @JsonValidation.validate
     def get(self, request):
-        followers = Following.objects.filter(
-            user=self.user, created_by=self.user.id)
+        followers = Following.objects.filter(user=self.user, created_by=self.user.id)
 
         follower_list = [
             {'uid': usr.followed.uid, 'nick_name': usr.followed.nick_name}
@@ -345,18 +337,18 @@ class Follow(MetaApiViewClass):
         self.check_user(followed_user)
 
         try:
-            SalesMan.objects.filter(
-                user=followed_user, is_deleted=False).order_by('-created_at')[0]
+            SalesMan.objects.filter(user=followed_user, is_deleted=False).order_by('-created_at')[0]
         except IndexError:
             return self.bad_request(message=[29])
 
         try:
-            Following.objects.get(
-                user=self.user, followed_user=data['followed_user_id'])
+            Following.objects.get(user=self.user, followed_user=data['followed_user_id'])
             return self.bad_request(message=[30])
         except Following.DoesNotExist:
             Following.objects.create(
-                user=self.user, followed_user=followed_user, created_by=self.user.id).save()
+                user=self.user, followed_user=followed_user,
+                created_by=self.user.id
+            ).save()
 
         return self.success(message=[31])
 
@@ -367,7 +359,8 @@ class Follow(MetaApiViewClass):
 
         try:
             following = Following.objects.get(
-                user=self.user, followed_user=data['followed_user_id'], created_by=self.user.id
+                user=self.user, followed_user=data['followed_user_id'],
+                created_by=self.user.id
             )
         except Following.DoesNotExist:
             return self.bad_request(message=[32])
