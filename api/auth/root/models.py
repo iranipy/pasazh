@@ -69,9 +69,6 @@ class User(utils.AbstractModel):
     is_deleted = models.BooleanField(default=False)
     deleted_date = models.DateTimeField(default=None, blank=True, null=True)
 
-    objects = models.Manager()
-    secure_objects = utils.Security.SecureObjects()
-
     class Meta:
         db_table = generate_table_name('user')
         constraints = [
