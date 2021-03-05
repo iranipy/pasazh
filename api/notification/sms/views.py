@@ -16,7 +16,6 @@ class ViewTemplate(MetaApiViewClass):
 
 class SendSMS(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def post(self, request):
         """sms-send
@@ -47,7 +46,6 @@ class SendSMS(ViewTemplate):
 
 class SendMassSMS(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def post(self, request):
         """sms-sendarray
@@ -78,7 +76,6 @@ class SendMassSMS(ViewTemplate):
 
 class SMSStatus(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         """sms-status
@@ -100,7 +97,6 @@ class SMSStatus(ViewTemplate):
 
 class SelectSMS(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         """sms-select
@@ -122,7 +118,6 @@ class SelectSMS(ViewTemplate):
 
 class CancelSms(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def delete(self, request):
         """sms-cancel
@@ -143,7 +138,6 @@ class CancelSms(ViewTemplate):
 
 class SelectOutBoxSMS(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         """sms-selectoutbox
@@ -164,7 +158,6 @@ class SelectOutBoxSMS(ViewTemplate):
 
 class CountOutBoxSMS(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         """sms-countoutbox
@@ -185,7 +178,6 @@ class CountOutBoxSMS(ViewTemplate):
 
 class CountInBoxSMS(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         """sms-countinbox
@@ -206,7 +198,6 @@ class CountInBoxSMS(ViewTemplate):
 
 class ReadInbox(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         """sms-unreads

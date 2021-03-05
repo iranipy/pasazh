@@ -173,25 +173,7 @@ class CustomResponse:
 
 
 class MetaApiViewClass(APIView, Helpers, CustomResponse):
-
-    @classmethod
-    def generic_decor(cls):
-        def decorator(func):
-            def wrapper(*args, **kwargs):
-                try:
-                    return func(*args, **kwargs)
-                except cls.NotFound as e:
-                    return cls.not_found(message=e.message, data=e.data)
-                except cls.BadRequest as e:
-                    return cls.bad_request(message=e.message, data=e.data)
-                except cls.CustomResponseException as e:
-                    return cls.general_response(state=e.state, message=e.message, data=e.data)
-                except Exception as e:
-                    return cls.internal_error(message=[str(e)])
-
-            return wrapper
-
-        return decorator
+    pass
 
 
 class JsonValidation:
