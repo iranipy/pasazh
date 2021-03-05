@@ -6,13 +6,28 @@ import fastjsonschema
 from functools import wraps
 from rest_framework.response import Response
 from rest_framework import status as stat
-from rest_framework.views import APIView
+from rest_framework.views import APIView, exception_handler
 from django.forms.models import model_to_dict
 from django.db import models
 from django.urls import re_path
 
 from .messages import messages
 from .schema import schema
+
+
+def custom_exception_handler(exc, context):
+    response = exception_handler(exc, context)
+
+    if isinstance(exc, CustomResponse.NotFound):
+        return CustomResponse.not_found(message=exc.message, data=exc.data)
+    elif isinstance(exc, CustomResponse.BadRequest):
+        return CustomResponse.bad_request(message=exc.message, data=exc.data)
+    elif isinstance(exc, CustomResponse.CustomResponseException):
+        return CustomResponse.general_response(state=exc.state, message=exc.message, data=exc.data)
+    elif isinstance(exc, Exception):
+        return CustomResponse.internal_error(message=[str(exc)])
+
+    return response
 
 
 class CustomManager(models.Manager):
@@ -195,15 +210,25 @@ class JsonValidation:
         def decorator(*args, **kwargs):
             request = args[1]
             obj_to_validate = request.data
+            bool_val = {'true': True, 'false': False}
 
             curr_schema = cls.find_schema(request.path_info[1:], request.method)
             if not curr_schema:
                 return f(*args, **kwargs)
 
-            if request.method in ['GET', 'DELETE']:
+            if request.method in ['GET', 'DELETE'] and request.query_params:
                 obj_to_validate = {}
                 for key in request.query_params:
                     obj_to_validate[key] = request.query_params.get(key)
+
+            for key in obj_to_validate:
+                val = obj_to_validate[key]
+                if not isinstance(val, str):
+                    continue
+
+                val = bool_val.get(val.lower())
+                if isinstance(val, bool):
+                    obj_to_validate[key] = val
 
             validate_schema = fastjsonschema.compile(curr_schema)
             validate_schema(obj_to_validate)

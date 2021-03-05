@@ -42,6 +42,10 @@ MIDDLEWARE = [
     'main.middlewares.FixRequestParams',
 ]
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'main.utils.custom_exception_handler',
+}
+
 ROOT_URLCONF = 'main.urls'
 
 TEMPLATES = [

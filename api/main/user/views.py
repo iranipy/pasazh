@@ -7,7 +7,7 @@ class UpdateUserProfile(MetaApiViewClass):
     @JsonValidation.validate
     def put(self, request):
         self.request.data['user_id'] = self.token_info['user_id']
-        self.auth_req.put('/user-profile', data=self.request.data)
+        self.auth_req.put('/user-profile', json=self.request.data)
 
     @MetaApiViewClass.generic_decor(protected=True, return_token_info=True)
     def delete(self, request):
@@ -25,7 +25,7 @@ class Follow(MetaApiViewClass):
     @JsonValidation.validate
     def post(self, request):
         self.request.data['user_id'] = self.token_info['user_id']
-        self.auth_req.post('/follow-user', data=self.request.data)
+        self.auth_req.post('/follow-user', json=self.request.data)
 
     @MetaApiViewClass.generic_decor(protected=True, return_token_info=True)
     @JsonValidation.validate
@@ -46,7 +46,7 @@ class Block(MetaApiViewClass):
     @JsonValidation.validate
     def post(self, request):
         self.request.data['user_id'] = self.token_info['user_id']
-        self.auth_req.post('/block-user', data=self.request.data)
+        self.auth_req.post('/block-user', json=self.request.data)
 
     @MetaApiViewClass.generic_decor(protected=True, return_token_info=True)
     @JsonValidation.validate

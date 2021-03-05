@@ -264,11 +264,3 @@ class OptionValueManagement(MetaApiViewClass):
             return self.not_found()
 
         return self.success(message=[27])
-
-
-# class ProductsByUID(MetaApiViewClass):
-#     @MetaApiViewClass.generic_decor()
-#     @JsonValidation.validate
-#     def get(self, request):
-#         data = self.request.query_params
-#         salesman_products = Product.objects.filter(uid__startswith=data['salesman_uid'])

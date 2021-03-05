@@ -4,7 +4,6 @@ from .models import Configs
 
 class Config(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
     def get(self, request):
         data = self.request.query_params
 
@@ -14,7 +13,6 @@ class Config(MetaApiViewClass):
         except IndexError:
             return self.not_found(message=[5])
 
-    @MetaApiViewClass.generic_decor()
     def put(self, request):
         data = self.request.data
         data['modified_by'] = data.pop('user_id')
@@ -37,7 +35,6 @@ class Config(MetaApiViewClass):
 
 class OTPConfig(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
     def get(self, request):
         data = self.request.query_params
         otp_code = data.get('otp_code')

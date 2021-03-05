@@ -38,6 +38,10 @@ MIDDLEWARE = [
     'auth.middlewares.FixRequestParams',
 ]
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'auth.utils.custom_exception_handler',
+}
+
 ROOT_URLCONF = 'auth.urls'
 
 TEMPLATES = [

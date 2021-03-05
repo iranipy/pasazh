@@ -7,13 +7,28 @@ from functools import wraps
 from random import randint
 from rest_framework.response import Response
 from rest_framework import status as stat
-from rest_framework.views import APIView
+from rest_framework.views import APIView, exception_handler
 from django.forms.models import model_to_dict
 from django.db import models
 from django.urls import re_path
 
 from .messages import messages
 from .schema import schema
+
+
+def custom_exception_handler(exc, context):
+    response = exception_handler(exc, context)
+
+    if isinstance(exc, CustomResponse.NotFound):
+        return CustomResponse.not_found(message=exc.message, data=exc.data)
+    elif isinstance(exc, CustomResponse.BadRequest):
+        return CustomResponse.bad_request(message=exc.message, data=exc.data)
+    elif isinstance(exc, CustomResponse.CustomResponseException):
+        return CustomResponse.general_response(state=exc.state, message=exc.message, data=exc.data)
+    elif isinstance(exc, Exception):
+        return CustomResponse.internal_error(message=[str(exc)])
+
+    return response
 
 
 class CustomManager(models.Manager):
@@ -218,37 +233,28 @@ class MetaApiViewClass(APIView, Helpers, CustomResponse):
     def generic_decor(cls, protected=False, return_token_info=False, check_user=False):
         def decorator(func):
             def wrapper(*args, **kwargs):
-                try:
-                    if protected:
-                        request = args[1]
-                        auth_token_key = cls.__auth_token_key
-                        token = request.headers.get(auth_token_key)
+                if protected:
+                    request = args[1]
+                    auth_token_key = cls.__auth_token_key
+                    token = request.headers.get(auth_token_key)
 
-                        params = {
-                            "return_token_info": return_token_info,
-                            "check_user": check_user,
-                        }
+                    params = {
+                        "return_token_info": return_token_info,
+                        "check_user": check_user,
+                    }
 
-                        res = cls.auth_req.get(
-                            '/find-user-by-token/', params=params, return_data=True,
-                            headers={auth_token_key: token}
-                        )
+                    res = cls.auth_req.get(
+                        '/find-user-by-token/', params=params, return_data=True,
+                        headers={auth_token_key: token}
+                    )
 
-                        cls.token_info = res.get('token_info')
-                        cls.user = res.get('user')
+                    cls.token_info = res.get('token_info')
+                    cls.user = res.get('user')
 
-                        if check_user and not cls.user:
-                            return cls.not_found(message=[19])
+                    if check_user and not cls.user:
+                        return cls.not_found(message=[19])
 
-                    return func(*args, **kwargs)
-                except cls.NotFound as e:
-                    return cls.not_found(message=e.message, data=e.data)
-                except cls.BadRequest as e:
-                    return cls.bad_request(message=e.message, data=e.data)
-                except cls.CustomResponseException as e:
-                    return cls.general_response(state=e.state, message=e.message, data=e.data)
-                except Exception as e:
-                    return cls.internal_error(message=[str(e)])
+                return func(*args, **kwargs)
 
             return wrapper
 
@@ -271,15 +277,25 @@ class JsonValidation:
         def decorator(*args, **kwargs):
             request = args[1]
             obj_to_validate = request.data
+            bool_val = {'true': True, 'false': False}
 
             curr_schema = cls.find_schema(request.path_info[1:], request.method)
             if not curr_schema:
                 return f(*args, **kwargs)
 
-            if request.method in ['GET', 'DELETE']:
+            if request.method in ['GET', 'DELETE'] and request.query_params:
                 obj_to_validate = {}
                 for key in request.query_params:
                     obj_to_validate[key] = request.query_params.get(key)
+
+            for key in obj_to_validate:
+                val = obj_to_validate[key]
+                if not isinstance(val, str):
+                    continue
+
+                val = bool_val.get(val.lower())
+                if isinstance(val, bool):
+                    obj_to_validate[key] = val
 
             validate_schema = fastjsonschema.compile(curr_schema)
             validate_schema(obj_to_validate)

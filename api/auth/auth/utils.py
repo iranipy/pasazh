@@ -14,13 +14,28 @@ from secrets import token_hex
 from functools import wraps
 from rest_framework.response import Response
 from rest_framework import status as stat
-from rest_framework.views import APIView
+from rest_framework.views import APIView, exception_handler
 from django.forms.models import model_to_dict
 from django.db import models
 from django.urls import re_path
 
 from .messages import messages
 from .schema import schema
+
+
+def custom_exception_handler(exc, context):
+    response = exception_handler(exc, context)
+
+    if isinstance(exc, CustomResponse.NotFound):
+        return CustomResponse.not_found(message=exc.message, data=exc.data)
+    elif isinstance(exc, CustomResponse.BadRequest):
+        return CustomResponse.bad_request(message=exc.message, data=exc.data)
+    elif isinstance(exc, CustomResponse.CustomResponseException):
+        return CustomResponse.general_response(state=exc.state, message=exc.message, data=exc.data)
+    elif isinstance(exc, Exception):
+        return CustomResponse.internal_error(message=[str(exc)])
+
+    return response
 
 
 class CustomManager(models.Manager):
@@ -30,7 +45,6 @@ class CustomManager(models.Manager):
 
 
 class AbstractModel(models.Model):
-
     created_at = models.DateTimeField(default=datetime.datetime.utcnow)
     modified_at = models.DateTimeField(default=datetime.datetime.utcnow)
     created_by = models.BigIntegerField(default=-1)
@@ -295,41 +309,30 @@ class MetaApiViewClass(APIView, Helpers, CustomResponse):
     config_req = CustomRequest('config')
 
     @classmethod
-    def generic_decor(cls, user_by_id=False, user_id_in_params=False, serialize=False):
+    def get_user(cls, user_id_in_params=False, serialize=False):
         def decorator(func):
             def wrapper(*args, **kwargs):
                 request = args[1]
                 user_id = request.data.get('user_id')
 
+                if user_id_in_params:
+                    user_id = request.query_params.get('user_id')
+
+                if not user_id:
+                    return cls.not_found(message=[8])
+
                 try:
-                    if user_id_in_params:
-                        user_id = request.query_params.get('user_id')
+                    user = root_models.User.objects.get(id=user_id)
+                except root_models.User.DoesNotExist:
+                    return cls.not_found(message=[8])
 
-                    if user_by_id:
-                        if not user_id:
-                            return cls.not_found(message=[8])
+                cls.check_user(user)
 
-                        try:
-                            user = root_models.User.objects.get(id=user_id)
-                        except root_models.User.DoesNotExist:
-                            return cls.not_found(message=[8])
+                cls.user = user
+                if serialize:
+                    cls.user = cls.serialize(user)
 
-                        cls.check_user(user)
-
-                        cls.user = user
-                        if serialize:
-                            cls.user = cls.serialize(user)
-
-                    return func(*args, **kwargs)
-
-                except cls.NotFound as e:
-                    return cls.not_found(message=e.message, data=e.data)
-                except cls.BadRequest as e:
-                    return cls.bad_request(message=e.message, data=e.data)
-                except cls.CustomResponseException as e:
-                    return cls.general_response(state=e.state, message=e.message, data=e.data)
-                except Exception as e:
-                    return cls.internal_error(message=[str(e)])
+                return func(*args, **kwargs)
 
             return wrapper
 
@@ -352,15 +355,25 @@ class JsonValidation:
         def decorator(*args, **kwargs):
             request = args[1]
             obj_to_validate = request.data
+            bool_val = {'true': True, 'false': False}
 
             curr_schema = cls.find_schema(request.path_info[1:], request.method)
             if not curr_schema:
                 return f(*args, **kwargs)
 
-            if request.method in ['GET', 'DELETE']:
+            if request.method in ['GET', 'DELETE'] and request.query_params:
                 obj_to_validate = {}
                 for key in request.query_params:
                     obj_to_validate[key] = request.query_params.get(key)
+
+            for key in obj_to_validate:
+                val = obj_to_validate[key]
+                if not isinstance(val, str):
+                    continue
+
+                val = bool_val.get(val.lower())
+                if isinstance(val, bool):
+                    obj_to_validate[key] = val
 
             validate_schema = fastjsonschema.compile(curr_schema)
             validate_schema(obj_to_validate)

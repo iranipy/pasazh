@@ -8,4 +8,3 @@ class EmailAnnouncement(MetaApiViewClass):
     def post(self, request):
         data = self.request.data
         followers = self.auth_req.get('/follow-user', params={'user_id': self.token_info['user_id']}, return_data=True)
-g

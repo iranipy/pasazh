@@ -39,6 +39,10 @@ MIDDLEWARE = [
     'notification.middlewares.FixRequestParams',
 ]
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'notification.utils.custom_exception_handler',
+}
+
 ROOT_URLCONF = 'notification.urls'
 
 TEMPLATES = [

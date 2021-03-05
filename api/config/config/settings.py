@@ -38,6 +38,10 @@ MIDDLEWARE = [
     'config.middlewares.FixRequestParams',
 ]
 
+REST_FRAMEWORK = {
+    'EXCEPTION_HANDLER': 'config.utils.custom_exception_handler',
+}
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [

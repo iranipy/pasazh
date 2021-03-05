@@ -8,7 +8,6 @@ from .models import User, OTP, City, SalesMan, JobCategory, BlackList, Following
 
 class FindUserByMobile(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor()
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -43,7 +42,6 @@ class FindUserByToken(MetaApiViewClass):
 
     __auth_token_key = getenv('AUTH_TOKEN_KEY')
 
-    @MetaApiViewClass.generic_decor()
     def get(self, request):
         data = self.request.query_params
         token = self.request.headers.get(self.__auth_token_key)
@@ -72,7 +70,7 @@ class FindUserByToken(MetaApiViewClass):
 
 class CreateOtp(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(user_by_id=True)
+    @MetaApiViewClass.get_user()
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -89,10 +87,10 @@ class CreateOtp(MetaApiViewClass):
         otp = OTPRecord.create_otp_fields(data['confirm_code_expire_minutes'], data['otp_code_length'])
         OTP.objects.create(user=self.user, created_by=self.user.id, **otp).save()
 
-        config_req = self.config_req.get(url='/otp', params={'otp_code': otp['code']}, return_data=True)
+        config_res = self.config_req.get(url='/otp', params={'otp_code': otp['code']}, return_data=True)
 
         res = self.notification_req.post(url='/sms/send-sms', data={
-            'receptor': self.user.mobile, 'message': config_req['msg']
+            'receptor': self.user.mobile, 'message': config_res['msg']
         }, check_success=True)
 
         if not res:
@@ -103,7 +101,7 @@ class CreateOtp(MetaApiViewClass):
 
 class ConfirmCode(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(user_by_id=True)
+    @MetaApiViewClass.get_user()
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -135,7 +133,7 @@ class ConfirmCode(MetaApiViewClass):
 
 class UserProfile(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(user_by_id=True)
+    @MetaApiViewClass.get_user()
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data
@@ -150,7 +148,7 @@ class UserProfile(MetaApiViewClass):
 
         return self.success(message=[15])
 
-    @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
+    @MetaApiViewClass.get_user(user_id_in_params=True)
     def delete(self, request):
         self.user.modified_by = self.user.id
         self.user.is_deleted = True
@@ -162,7 +160,7 @@ class UserProfile(MetaApiViewClass):
 
 class SalesManView(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
+    @MetaApiViewClass.get_user(user_id_in_params=True)
     @JsonValidation.validate
     def get(self, request):
         try:
@@ -175,7 +173,7 @@ class SalesManView(MetaApiViewClass):
 
         return self.success(data=self.serialize(sales_man))
 
-    @MetaApiViewClass.generic_decor(user_by_id=True)
+    @MetaApiViewClass.get_user()
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -198,6 +196,7 @@ class SalesManView(MetaApiViewClass):
                 Q(is_deleted=False),
                 Q(user=self.user) | Q(username=data['username'])
             ).order_by('-created_at')[0]
+
             return self.bad_request(message=[19])
         except IndexError:
             SalesMan.objects.create(
@@ -208,7 +207,7 @@ class SalesManView(MetaApiViewClass):
 
         return self.success(message=[20])
 
-    @MetaApiViewClass.generic_decor(user_by_id=True)
+    @MetaApiViewClass.get_user()
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data
@@ -234,7 +233,7 @@ class SalesManView(MetaApiViewClass):
 
         return self.success(message=[22])
 
-    @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
+    @MetaApiViewClass.get_user(user_id_in_params=True)
     @JsonValidation.validate
     def delete(self, request):
         try:
@@ -251,7 +250,7 @@ class SalesManView(MetaApiViewClass):
 
 class Block(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
+    @MetaApiViewClass.get_user(user_id_in_params=True)
     @JsonValidation.validate
     def get(self, request):
         banned_users = BlackList.objects.filter(user=self.user, created_by=self.user.id)
@@ -263,7 +262,7 @@ class Block(MetaApiViewClass):
 
         return self.success(data={'length': len(black_list), 'blackList': black_list})
 
-    @MetaApiViewClass.generic_decor(user_by_id=True)
+    @MetaApiViewClass.get_user()
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -289,7 +288,7 @@ class Block(MetaApiViewClass):
 
         return self.success(message=[25])
 
-    @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
+    @MetaApiViewClass.get_user(user_id_in_params=True)
     @JsonValidation.validate
     def delete(self, request):
         data = self.request.query_params
@@ -309,7 +308,7 @@ class Block(MetaApiViewClass):
 
 class Follow(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
+    @MetaApiViewClass.get_user(user_id_in_params=True)
     @JsonValidation.validate
     def get(self, request):
         followers = Following.objects.filter(user=self.user, created_by=self.user.id)
@@ -321,7 +320,7 @@ class Follow(MetaApiViewClass):
 
         return self.success(data={'length': len(follower_list), 'followers': follower_list})
 
-    @MetaApiViewClass.generic_decor(user_by_id=True)
+    @MetaApiViewClass.get_user()
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -352,7 +351,7 @@ class Follow(MetaApiViewClass):
 
         return self.success(message=[31])
 
-    @MetaApiViewClass.generic_decor(user_by_id=True, user_id_in_params=True)
+    @MetaApiViewClass.get_user(user_id_in_params=True)
     @JsonValidation.validate
     def delete(self, request):
         data = self.request.query_params
