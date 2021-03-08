@@ -52,7 +52,7 @@ class ConfirmCode(MetaApiViewClass):
 
 class Verify(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     def get(self, request):
 
         return self.success(data={'user': self.user})

@@ -13,7 +13,6 @@ class ViewTemplate(MetaApiViewClass):
 
 class SendMail(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -41,7 +40,6 @@ class SendMail(ViewTemplate):
 
 class SendMassMail(ViewTemplate):
 
-    @ViewTemplate.generic_decor()
     @JsonValidation.validate
     def post(self, requests):
         data = self.request.data

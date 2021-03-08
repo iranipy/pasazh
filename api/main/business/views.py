@@ -6,7 +6,7 @@ from .models import Product, Category, ProductAttachment, Option, OptionValue
 
 class CategoryManagement(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def get(self, request):
         categories = Category.objects.filter(Q(is_public=True) | Q(created_by=self.user['id']))
@@ -16,7 +16,7 @@ class CategoryManagement(MetaApiViewClass):
 
         return self.success(data={'categories': self.serialize_list(categories)})
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -28,7 +28,7 @@ class CategoryManagement(MetaApiViewClass):
             Category.objects.create(created_by=self.user['id'], **data).save()
             return self.success(message=[8])
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data
@@ -46,7 +46,7 @@ class CategoryManagement(MetaApiViewClass):
 
         return self.success(message=[10])
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         data = self.request.query_params
@@ -73,7 +73,7 @@ class ProductManagement(MetaApiViewClass):
         except Category.DoesNotExist:
             cls.bad_request(message=[9])
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -85,7 +85,7 @@ class ProductManagement(MetaApiViewClass):
 
         return self.success(data={'products': self.serialize_list(products)})
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -100,7 +100,7 @@ class ProductManagement(MetaApiViewClass):
             Product.objects.create(created_by=self.user['id'], **data).save()
             return self.success(message=[28])
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def put(self, request):
         data = self.request.data
@@ -122,7 +122,7 @@ class ProductManagement(MetaApiViewClass):
 
         return self.success(message=[14])
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         data = self.request.query_params
@@ -137,7 +137,7 @@ class ProductManagement(MetaApiViewClass):
 
 class ProductAttachmentManagement(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -149,7 +149,7 @@ class ProductAttachmentManagement(MetaApiViewClass):
 
         return self.success(data={'product_attachments': self.serialize_list(product_attachments)})
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -163,7 +163,7 @@ class ProductAttachmentManagement(MetaApiViewClass):
 
         return self.success(message=[17])
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         data = self.request.query_params
@@ -180,7 +180,7 @@ class ProductAttachmentManagement(MetaApiViewClass):
 
 class OptionManagement(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -192,7 +192,7 @@ class OptionManagement(MetaApiViewClass):
 
         return self.success(data={'options': self.serialize_list(options)})
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -212,7 +212,7 @@ class OptionManagement(MetaApiViewClass):
             ).save()
             return self.success(message=[20])
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         data = self.request.query_params
@@ -227,7 +227,7 @@ class OptionManagement(MetaApiViewClass):
 
 class OptionValueManagement(MetaApiViewClass):
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def get(self, request):
         data = self.request.query_params
@@ -239,7 +239,7 @@ class OptionValueManagement(MetaApiViewClass):
 
         return self.success(data={'option_values': self.serialize_list(option_values)})
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def post(self, request):
         data = self.request.data
@@ -253,7 +253,7 @@ class OptionValueManagement(MetaApiViewClass):
 
         return self.success(message=[23])
 
-    @MetaApiViewClass.generic_decor(protected=True, check_user=True)
+    @MetaApiViewClass.verify_token(check_user=True)
     @JsonValidation.validate
     def delete(self, request):
         data = self.request.query_params
